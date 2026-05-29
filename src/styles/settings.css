@@ -1,0 +1,421 @@
+/* 设置面板 - Ant Design 风格 */
+
+.ai-settings-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08), 0 3px 6px rgba(0, 0, 0, 0.04), 0 9px 28px rgba(0, 0, 0, 0.05);
+    width: 90%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    font-size: 14px;
+    z-index: 100001;
+    animation: ai-settings-slide-in 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+@keyframes ai-settings-slide-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.ai-settings-panel h3 {
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #262626;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+/* 横向排列（前5个输入项） */
+.form-group.inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group.inline label {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    white-space: nowrap;
+    min-width: 90px;
+}
+
+.form-group.inline input,
+.form-group.inline select {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #434343;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 6px 11px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #262626;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+    border-color: #4096ff;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.form-group.config-select-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.form-group.config-select-group label {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+}
+
+/* 配置操作区域 */
+.config-ops-section {
+    margin: 20px 0 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.config-ops-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #434343;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.config-ops-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.config-ops-buttons button {
+    padding: 4px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.2s;
+    height: 30px;
+    line-height: 1.5715;
+    background: #ffffff;
+    color: #595959;
+}
+
+.config-ops-buttons button:hover {
+    color: #1677ff;
+    border-color: #1677ff;
+}
+
+/* 操作按钮行 */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px !important;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.action-buttons .history-btn {
+    padding: 4px 15px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    height: 32px;
+    background: #ffffff;
+    color: #595959;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-buttons .history-btn:hover {
+    color: #1677ff;
+    border-color: #1677ff;
+}
+
+.action-buttons-right {
+    display: flex;
+    gap: 8px;
+}
+
+.action-buttons-right button {
+    padding: 4px 20px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.2s;
+    height: 32px;
+    line-height: 1.5715;
+    background: #ffffff;
+    color: #595959;
+}
+
+.action-buttons-right button:hover {
+    color: #1677ff;
+    border-color: #1677ff;
+}
+
+.action-buttons-right .cancel-btn:hover {
+    color: #ff4d4f !important;
+    border-color: #ff4d4f !important;
+}
+
+.clear-cache-btn {
+    color: #ff4d4f !important;
+    border-color: #ffccc7 !important;
+}
+
+.clear-cache-btn:hover {
+    color: #ffffff !important;
+    background: #ff4d4f !important;
+    border-color: #ff4d4f !important;
+}
+
+.ai-config-select,
+.ai-prompt-template-select {
+    padding: 4px 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #595959;
+    height: 32px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.ai-config-select {
+    flex-grow: 1;
+}
+
+.ai-prompt-template-select {
+    width: 100%;
+}
+
+.ai-config-select:hover,
+.ai-prompt-template-select:hover {
+    border-color: #4096ff;
+}
+
+.ai-config-select:focus,
+.ai-prompt-template-select:focus {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+/* info 图标 tooltip */
+.ai-info-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    color: #bfbfbf;
+    cursor: help;
+    position: relative;
+    vertical-align: middle;
+}
+
+.ai-info-icon:hover {
+    color: #1677ff;
+}
+
+.ai-info-icon:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #262626;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: normal;
+    max-width: 280px;
+    text-align: left;
+    line-height: 1.6;
+    z-index: 100002;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+.ai-info-icon:hover::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #262626;
+    z-index: 100002;
+    pointer-events: none;
+}
+
+.delete-config-btn {
+    color: #ff4d4f !important;
+    border-color: #ffccc7 !important;
+}
+
+.delete-config-btn:hover {
+    color: #ffffff !important;
+    background: #ff4d4f !important;
+    border-color: #ff4d4f !important;
+}
+
+.action-buttons-right .save-btn {
+    background: #1677ff !important;
+    border-color: #1677ff !important;
+    color: #ffffff !important;
+}
+
+.action-buttons-right .save-btn:hover {
+    background: #4096ff !important;
+    border-color: #4096ff !important;
+}
+
+.action-buttons-right .save-btn:active {
+    background: #0958d9 !important;
+    border-color: #0958d9 !important;
+}
+
+.save-as-input-group,
+.rename-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.save-as-input-group input,
+.rename-input-group input {
+    flex: 1;
+    padding: 4px 11px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    height: 32px;
+    box-sizing: border-box;
+}
+
+.save-as-input-group input:focus,
+.rename-input-group input:focus {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+    outline: none;
+}
+
+.save-as-input-group button,
+.rename-input-group button {
+    padding: 4px 15px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    height: 32px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: #ffffff;
+    color: #595959;
+}
+
+.save-as-input-group button:hover,
+.rename-input-group button:hover {
+    color: #1677ff;
+    border-color: #1677ff;
+}
+
+.confirm-save-as-btn,
+.confirm-rename-btn {
+    background: #1677ff !important;
+    border-color: #1677ff !important;
+    color: #ffffff !important;
+}
+
+.confirm-save-as-btn:hover,
+.confirm-rename-btn:hover {
+    background: #4096ff !important;
+    border-color: #4096ff !important;
+}
+
+/* 设置面板覆盖层 */
+.ai-settings-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 100000;
+    animation: ai-overlay-fade-in 0.2s ease;
+}
+
+@keyframes ai-overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .ai-settings-panel {
+        width: 95%;
+        max-height: 90vh;
+    }
+}

@@ -1,0 +1,35 @@
+.ai-summary-container {
+    transition: transform 0.3s ease;
+}
+.ai-summary-container.docked {
+    transition: all 0.3s ease;
+}
+.ai-drag-handle {
+    pointer-events: auto !important;
+}
+.ai-summary-container.docked .ai-summary-btn span,
+.ai-summary-container.docked .ai-settings-quick-btn {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    opacity: 0;
+    transition: all 0.3s;
+}
+.ai-summary-container.docked.show-btn .ai-summary-btn span,
+.ai-summary-container.docked.show-btn .ai-settings-quick-btn {
+    width: auto;
+    padding: 6px 10px;
+    opacity: 1;
+}
+.ai-summary-container.docked.show-btn .ai-summary-btn {
+    padding: 6px 16px;
+}
+.ai-summary-container.right-dock {
+    right: 0 !important;
+    left: auto !important;
+}
+.ai-summary-container.left-dock {
+    left: 0 !important;
+    right: auto !important;
+}

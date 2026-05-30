@@ -97,6 +97,11 @@
     box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
 }
 
+/* API Key 输入框使用 text 类型伪装密码（避免触发浏览器密码管理器） */
+.ai-password-mask {
+    -webkit-text-security: disc;
+}
+
 .form-group textarea {
     height: 100px;
     resize: vertical;

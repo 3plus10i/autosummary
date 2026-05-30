@@ -18,7 +18,7 @@
             </div>
             <div class="form-group inline">
                 <label for="api-key">API Key</label>
-                <input type="password" id="api-key" value="${CONFIG.API_KEY}" placeholder="请输入你的API Key">
+                <input type="text" id="api-key" class="ai-password-mask" value="${CONFIG.API_KEY}" placeholder="请输入你的API Key">
             </div>
             <div class="form-group inline">
                 <label for="model">模型</label>

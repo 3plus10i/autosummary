@@ -18,8 +18,12 @@
 
         try {
             const apiUrl = normalizeApiUrl(CONFIG.API_URL);
+
+            // DEBUG: 打印发送给AI的网页内容
+            console.log('[AI Summary] 发送的网页内容:', content);
+
             const requestPromise = new Promise((resolve, reject) => {
-                console.log('Sending request to:', apiUrl);
+                console.log('[AI Summary] Sending request to:', apiUrl);
                 GM.xmlHttpRequest({
                     method: 'POST',
                     url: apiUrl,

@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         AI网页内容总结(增强版)
+// @name         AI网页内容总结
 // @namespace    http://tampermonkey.net/
 // @version      2.0
 // @description  使用AI总结网页内容，提升浏览效率
-// @author       Jinfeng
-// @icon         
+// @author       3plus10i
+// @icon         https://gh-proxy.org/https://github.com/3plus10i/autosummary/main/public/as.png
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -15,7 +15,8 @@
 // @license      Apache-2.0
 // ==/UserScript==
 
-// Copyright 2024 Jinfeng
+// Original work Copyright 2024 Jinfeng
+// Modified work Copyright 2026 3plus10i
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

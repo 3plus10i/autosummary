@@ -6,7 +6,6 @@
     async function summarizeContent(content, shadow, contentContainer) {
         const CONFIG = ctx.CONFIG;
         const typeWriter = ctx.typeWriter;
-        const markdownRenderer = ctx.markdownRenderer;
 
         contentContainer.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div><span>正在生成总结...</span></div>';
 
@@ -22,11 +21,7 @@
                 apiUrl = apiUrl.replace(/\/+$/, '') + '/chat/completions';
             }
 
-            // DEBUG: 打印发送给AI的网页内容
-            console.log('[AI Summary] 发送的网页内容:', content);
-
             const requestPromise = new Promise((resolve, reject) => {
-                console.log('[AI Summary] Sending request to:', apiUrl);
                 GM.xmlHttpRequest({
                     method: 'POST',
                     url: apiUrl,

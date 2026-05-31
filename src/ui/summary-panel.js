@@ -16,14 +16,15 @@
         const mainStyle = document.createElement('style');
         mainStyle.textContent = `/* CSS_SUMMARY_PLACEHOLDER */`;
 
-        const contentStyle = document.createElement('style');
-        contentStyle.textContent = `/* CSS_CONTENT_PLACEHOLDER */`;
-
         // === 浮动按钮容器（右下角常驻） ===
         const container = document.createElement('div');
         container.className = 'ai-summary-container';
         container.innerHTML = `
-            <div class="ai-drag-handle"></div>
+            <div class="ai-drag-handle">
+                <svg width="12" height="20" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M10 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm-4 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5-9a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6 5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path>
+                </svg>
+            </div>
             <button class="ai-summary-btn" title="总结网页">
                 <span>总结网页</span>
             </button>
@@ -40,8 +41,6 @@
         btnStyle.textContent = `
             .ai-summary-container {
                 position: fixed;
-                bottom: 20px;
-                right: 20px;
                 display: flex;
                 align-items: center;
                 z-index: 99990;
@@ -51,6 +50,11 @@
                 background: #ffffff;
                 border: 1px solid #f0f0f0;
                 overflow: hidden;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+            .ai-summary-container:hover {
+                opacity: 1;
             }
             .ai-drag-handle {
                 width: 16px;
@@ -60,17 +64,13 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #bfbfbf;
+                color: #333333;
                 font-size: 12px;
                 border-right: 1px solid #f0f0f0;
                 transition: color 0.2s;
             }
             .ai-drag-handle:hover {
                 color: #1677ff;
-            }
-            .ai-drag-handle::before {
-                content: "\\2807";
-                letter-spacing: -2px;
             }
             .ai-summary-btn {
                 padding: 4px 10px;
@@ -117,37 +117,10 @@
                 width: 12px;
                 height: 12px;
             }
-            /* 拖拽停靠 */
-            .ai-summary-container.docked .ai-summary-btn span,
-            .ai-summary-container.docked .ai-settings-quick-btn {
-                width: 0;
-                padding: 0;
-                overflow: hidden;
-                border: none;
-                opacity: 0;
-                transition: all 0.3s;
-            }
-            .ai-summary-container.docked.show-btn .ai-summary-btn,
-            .ai-summary-container.docked.show-btn .ai-settings-quick-btn {
-                width: auto;
-                padding: 4px 8px;
-                opacity: 1;
-            }
-            .ai-summary-container.docked.show-btn .ai-summary-btn {
-                padding: 4px 10px;
-            }
-            .ai-summary-container.docked.show-btn .ai-settings-quick-btn {
-                border-left: 1px solid #f0f0f0;
-            }
-            .ai-summary-container.right-dock {
-                right: 0 !important;
-                left: auto !important;
-                border-radius: 6px 0 0 6px;
-            }
-            .ai-summary-container.left-dock {
-                left: 0 !important;
-                right: auto !important;
-                border-radius: 0 6px 6px 0;
+            /* 拖拽至边缘隐藏 */
+            .ai-summary-container.near-edge {
+                opacity: 0.45;
+                pointer-events: none;
             }
             @media (max-width: 768px) {
                 .ai-summary-container {
@@ -166,10 +139,8 @@
             <div class="ai-panel-resize-right"></div>
             <div class="ai-panel-header">
                 <div class="ai-panel-drag-icon" title="拖动窗口">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/>
-                        <circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/>
-                        <circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M10 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm-4 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5-9a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6 5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path>
                     </svg>
                 </div>
                 <h3 class="ai-panel-title">网页总结</h3>
@@ -224,7 +195,6 @@
 
         // 组装到Shadow DOM
         shadow.appendChild(mainStyle);
-        shadow.appendChild(contentStyle);
         shadow.appendChild(btnStyle);
         shadow.appendChild(container);
         shadow.appendChild(summaryPanel);

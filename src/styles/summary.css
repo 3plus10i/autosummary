@@ -92,7 +92,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #bfbfbf;
+    color: #333333;
     padding: 0 8px;
     flex-shrink: 0;
     pointer-events: none;
@@ -101,7 +101,6 @@
 .ai-panel-drag-icon svg {
     width: 14px;
     height: 14px;
-    opacity: 0.6;
 }
 
 /* 左右边缘拖拽缩放 */

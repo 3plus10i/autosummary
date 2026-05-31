@@ -17,7 +17,6 @@ const JS_MODULES = [
   'config/storage.js',
   'config/templates.js',
   'utils/content.js',
-  'utils/shortcut.js',
   'utils/markdown.js',
   'utils/history.js',
   'utils/token.js',
@@ -34,7 +33,6 @@ const JS_MODULES = [
 const CSS_FILES = {
   'settings.css':   { target: 'ui/settings-panel.js',  marker: '/* CSS_SETTINGS_PLACEHOLDER */' },
   'summary.css':    { target: 'ui/summary-panel.js',    marker: '/* CSS_SUMMARY_PLACEHOLDER */' },
-  'content.css':    { target: 'ui/summary-panel.js',    marker: '/* CSS_CONTENT_PLACEHOLDER */' },
   'drag.css':       { target: 'utils/drag.js',           marker: '/* CSS_DRAG_PLACEHOLDER */' },
   'history.css':    { target: 'ui/history-modal.js',     marker: '/* CSS_HISTORY_PLACEHOLDER */' },
 };

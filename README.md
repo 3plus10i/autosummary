@@ -1,17 +1,17 @@
-# AI网页内容总结
+# AutoSummary - AI网页内容总结
 
-在网页右下角添加一个常驻“总结网页”按钮，一键调用 AI 对当前页面进行智能总结。
+在网页右下角添加一个常驻“总结网页”按钮，一键调用 AI 对当前页面进行快速总结。
 
 ## 功能
 
 - 常驻右下角浮动按钮，一键总结网页内容
 - 可折叠浮窗显示总结结果，等AI响应时不中断浏览
-- 多种预设提示词模板，不同的总结语言风格
+- 多种预设提示词模板，不同的总结风格
 - 多配置切换、保存、重命名
 - 保留最近 10 条历史总结记录，支持跳转原页面
 - 推荐使用 DeepSeek V4 Flash 或同等级模型平衡成本与质量
 
-项目地址：[https://github.com/deepseek/ai-summary](https://github.com/deepseek/ai-summary)
+项目地址：[https://github.com/3plus10i/autosummary](https://github.com/3plus10i/autosummary)
 
 当前版本 v2.0
 

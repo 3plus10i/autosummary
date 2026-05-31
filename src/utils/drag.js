@@ -3,18 +3,16 @@
 
     const ctx = window.__AI_SUMMARY__;
 
-    const DOCK_POSITIONS = { LEFT: 'left', RIGHT: 'right', NONE: 'none' };
-    const DEBOUNCE_TIME = 10;
-    const FOLD_DELAY = 1000;
-    const DOCK_THRESHOLD = 100;
+    const HIDE_THRESHOLD = 100;    // 靠近边缘多少像素触发隐藏
+    const ANIM_DURATION = 300;     // 移出动画时长(ms)
 
+    // ===== 持久化位置 =====
     function savePosition(container) {
+        if (container.classList.contains('hidden')) return;
         const position = {
             left: container.style.left,
             top: container.style.top,
             right: container.style.right,
-            bottom: container.style.bottom,
-            dockPosition: container.dataset.dockPosition || DOCK_POSITIONS.NONE,
             windowWidth: window.innerWidth,
             windowHeight: window.innerHeight
         };
@@ -22,135 +20,205 @@
     }
 
     function loadPosition(container) {
-        const savedPosition = GM_getValue('containerPosition');
-        if (!savedPosition) return;
-        const currentWindowRatio = window.innerWidth / savedPosition.windowWidth;
-        const heightRatio = window.innerHeight / (savedPosition.windowHeight || window.innerHeight);
-        if (savedPosition.dockPosition === DOCK_POSITIONS.LEFT) {
-            dockToLeft(container);
-        } else if (savedPosition.dockPosition === DOCK_POSITIONS.RIGHT) {
-            dockToRight(container);
-        } else {
-            const containerWidth = container.offsetWidth;
-            const containerHeight = container.offsetHeight;
-            const left = parseInt(savedPosition.left) * currentWindowRatio;
-            const maxLeft = window.innerWidth - containerWidth;
-            const safeLeft = Math.max(0, Math.min(left, maxLeft));
-            const rawTop = parseInt(savedPosition.top);
-            let safeTop;
-            if (rawTop * heightRatio > window.innerHeight - containerHeight) {
-                safeTop = window.innerHeight - containerHeight - 20;
-            } else {
-                safeTop = Math.max(0, Math.min(rawTop * heightRatio, window.innerHeight - containerHeight));
-            }
-            container.style.left = safeLeft + 'px';
-            container.style.top = safeTop + 'px';
+        const saved = GM_getValue('containerPosition', null);
+        if (!saved) return;
+        if (saved.top) {
+            const w = container.offsetWidth;
+            const h = container.offsetHeight;
+            const rw = window.innerWidth / saved.windowWidth;
+            const rh = window.innerHeight / (saved.windowHeight || window.innerHeight);
+            const left = parseInt(saved.left) * rw;
+            const top = parseInt(saved.top) * rh;
+            container.style.left = Math.max(0, Math.min(left, window.innerWidth - w)) + 'px';
+            container.style.top = Math.max(0, Math.min(top, window.innerHeight - h)) + 'px';
             container.style.right = 'auto';
-            container.style.bottom = 'auto';
         }
     }
 
-    function dockToLeft(container) {
-        container.classList.add('docked', 'left-dock');
-        container.dataset.dockPosition = DOCK_POSITIONS.LEFT;
-        container.style.left = '0';
-        container.style.right = 'auto';
+    // ===== 隐藏/恢复 =====
+    function createEdgeIndicator() {
+        // 已在 document.body 中创建过则复用
+        let el = document.querySelector('.ai-edge-indicator');
+        if (el) return el;
+        el = document.createElement('div');
+        el.className = 'ai-edge-indicator';
+        el.innerHTML = '<span></span>';
+        el.style.cssText = `
+            position:fixed;top:50%;z-index:99991;
+            width:6px;height:36px;cursor:pointer;
+            background:rgba(22,119,255,0.12);
+            border-radius:0 4px 4px 0;
+            transition:background 0.2s,width 0.2s;
+            display:none;
+        `;
+        el.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(22,119,255,0.28)';
+            this.style.width = '10px';
+        });
+        el.addEventListener('mouseleave', function() {
+            this.style.background = 'rgba(22,119,255,0.12)';
+            this.style.width = '6px';
+        });
+        document.body.appendChild(el);
+        return el;
     }
 
-    function dockToRight(container) {
-        container.classList.add('docked', 'right-dock');
-        container.dataset.dockPosition = DOCK_POSITIONS.RIGHT;
-        container.style.right = '0';
-        container.style.left = 'auto';
+    function hideContainer(container, side, top) {
+        var w = container.offsetWidth;
+        var rect = container.getBoundingClientRect();
+        // 保存原位供恢复使用
+        container.dataset.savedTop = rect.top;
+        container.dataset.savedLeft = rect.left;
+        container.style.transition = 'all ' + ANIM_DURATION + 'ms ease';
+        container.style.opacity = '0';
+        container.dataset.hideSide = side;
+        if (side === 'right') {
+            container.style.right = '-' + w + 'px';
+            container.style.left = 'auto';
+        } else {
+            container.style.left = '-' + w + 'px';
+            container.style.right = 'auto';
+        }
+        setTimeout(function() {
+            container.classList.add('hidden');
+            container.style.display = 'none';
+            // 显示边缘指示器
+            var indicator = createEdgeIndicator();
+            var h = indicator.offsetHeight || 36;
+            var safeTop = Math.max(10, Math.min(top - h / 2, window.innerHeight - h - 10));
+            indicator.style.top = safeTop + 'px';
+            if (side === 'right') {
+                indicator.style.left = 'auto';
+                indicator.style.right = '0';
+                indicator.style.borderRadius = '4px 0 0 4px';
+            } else {
+                indicator.style.right = 'auto';
+                indicator.style.left = '0';
+                indicator.style.borderRadius = '0 4px 4px 0';
+            }
+            indicator.style.display = 'block';
+            indicator.onclick = function() { restoreContainer(container); };
+        }, ANIM_DURATION + 50);
     }
 
+    function restoreContainer(container) {
+        // 隐藏边缘指示器
+        var indicator = document.querySelector('.ai-edge-indicator');
+        if (indicator) indicator.style.display = 'none';
+        // 在原位置恢复
+        var savedTop = parseFloat(container.dataset.savedTop) || window.innerHeight / 2;
+        var savedLeft = parseFloat(container.dataset.savedLeft) || 0;
+        container.classList.remove('hidden');
+        container.style.display = 'flex';
+        container.style.transition = 'all ' + ANIM_DURATION + 'ms ease';
+        container.style.opacity = '0';
+        var side = container.dataset.hideSide || 'right';
+        if (side === 'right') {
+            container.style.right = '0px';
+            container.style.left = 'auto';
+        } else {
+            container.style.left = '0px';
+            container.style.right = 'auto';
+        }
+        container.style.top = Math.max(10, Math.min(savedTop, window.innerHeight - container.offsetHeight - 10)) + 'px';
+        requestAnimationFrame(function() {
+            container.style.opacity = '1';
+        });
+        container.dataset.hideSide = '';
+    }
+
+    // ===== 拖拽初始化 =====
     function initializeDrag(container, dragHandle, shadow) {
-        let isDragging = false, currentX, currentY, initialX, initialY, foldTimeout;
+        var isDragging = false, startX, startY, offsetX, offsetY, nearSide = '';
 
-        const style = document.createElement('style');
+        var style = document.createElement('style');
         style.textContent = `/* CSS_DRAG_PLACEHOLDER */`;
         shadow.appendChild(style);
 
-        container.addEventListener('mouseenter', () => {
-            clearTimeout(foldTimeout);
-            if (container.classList.contains('docked')) {
-                container.classList.add('show-btn');
-            }
-        });
-
-        container.addEventListener('mouseleave', () => {
-            if (container.classList.contains('docked')) {
-                foldTimeout = setTimeout(() => {
-                    container.classList.remove('show-btn');
-                }, FOLD_DELAY);
-            }
-        });
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => { clearTimeout(timeout); func(...args); };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
         loadPosition(container);
 
-        dragHandle.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            const rect = container.getBoundingClientRect();
-            initialX = e.clientX - rect.left;
-            initialY = e.clientY - rect.top;
-            if (container.classList.contains('right-dock')) {
-                currentX = window.innerWidth - container.offsetWidth;
-            } else if (container.classList.contains('left-dock')) {
-                currentX = 0;
-            } else {
-                currentX = rect.left;
+        dragHandle.addEventListener('mousedown', function(e) {
+            // 如果是隐藏状态，点击恢复
+            if (container.classList.contains('hidden')) {
+                restoreContainer(container);
+                return;
             }
-            currentY = rect.top;
-            container.classList.remove('docked', 'right-dock', 'left-dock', 'show-btn');
-            container.dataset.dockPosition = DOCK_POSITIONS.NONE;
+            isDragging = true;
+            var rect = container.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            startX = rect.left;
+            startY = rect.top;
+            container.style.transition = 'none';
+            container.style.opacity = '1';
+            nearSide = '';
             document.body.style.userSelect = 'none';
+            e.preventDefault();
         });
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('mousemove', function(e) {
             if (!isDragging) return;
             e.preventDefault();
-            const newX = e.clientX - initialX;
-            const newY = e.clientY - initialY;
-            const containerWidth = container.offsetWidth;
-            const containerHeight = container.offsetHeight;
-            if (e.clientX < DOCK_THRESHOLD) {
-                dockToLeft(container);
-                container.classList.add('show-btn');
-            } else if (e.clientX > window.innerWidth - DOCK_THRESHOLD) {
-                dockToRight(container);
-                container.classList.add('show-btn');
+            var w = container.offsetWidth;
+            var h = container.offsetHeight;
+
+            // 判断靠近哪一侧
+            if (e.clientX < HIDE_THRESHOLD) {
+                nearSide = 'left';
+            } else if (e.clientX > window.innerWidth - HIDE_THRESHOLD) {
+                nearSide = 'right';
             } else {
-                const maxX = window.innerWidth - containerWidth;
-                const maxY = window.innerHeight - containerHeight;
-                currentX = Math.max(0, Math.min(newX, maxX));
-                currentY = Math.max(0, Math.min(newY, maxY));
-                container.style.left = currentX + 'px';
-                container.style.top = currentY + 'px';
-                container.style.right = 'auto';
-                container.dataset.dockPosition = DOCK_POSITIONS.NONE;
-                container.classList.remove('docked', 'right-dock', 'left-dock', 'show-btn');
+                nearSide = '';
             }
+
+            // 半透明视效 + 提示文字
+            var btnSpan = container.querySelector('.ai-summary-btn span');
+            if (nearSide) {
+                container.style.opacity = '0.45';
+                container.classList.add('near-edge');
+                if (btnSpan) btnSpan.textContent = '松手隐藏';
+            } else {
+                container.style.opacity = '1';
+                container.classList.remove('near-edge');
+                if (btnSpan) btnSpan.textContent = '总结网页';
+            }
+
+            // 计算位置
+            var nx = e.clientX - offsetX;
+            var ny = e.clientY - offsetY;
+            nx = Math.max(0, Math.min(nx, window.innerWidth - w));
+            ny = Math.max(0, Math.min(ny, window.innerHeight - h));
+            container.style.left = nx + 'px';
+            container.style.top = ny + 'px';
+            container.style.right = 'auto';
+            startX = nx;
+            startY = ny;
         });
 
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                document.body.style.userSelect = 'auto';
+        document.addEventListener('mouseup', function() {
+            if (!isDragging) return;
+            isDragging = false;
+            document.body.style.userSelect = 'auto';
+            container.classList.remove('near-edge');
+            var btnSpan = container.querySelector('.ai-summary-btn span');
+            if (btnSpan) btnSpan.textContent = '总结网页';
+
+            if (nearSide) {
+                hideContainer(container, nearSide, startY + container.offsetHeight / 2);
+            } else {
+                container.style.opacity = '';
+                container.style.transition = '';
                 savePosition(container);
             }
+            nearSide = '';
         });
 
-        const debouncedLoadPosition = debounce(() => { loadPosition(container); }, DEBOUNCE_TIME);
-        window.addEventListener('resize', debouncedLoadPosition);
+        // 窗口尺寸变化时恢复位置
+        window.addEventListener('resize', function() {
+            if (!container.classList.contains('hidden')) {
+                loadPosition(container);
+            }
+        });
     }
 
     ctx.initializeDrag = initializeDrag;

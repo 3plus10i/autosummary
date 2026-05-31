@@ -8,7 +8,6 @@
         const CONFIG = ctx.CONFIG;
         const getAllConfigs = ctx.getAllConfigs;
         const saveConfigAs = ctx.saveConfigAs;
-        const loadSavedConfig = ctx.loadSavedConfig;
         const deleteConfig = ctx.deleteConfig;
         const renameConfig = ctx.renameConfig;
         const updateCurrentConfig = ctx.updateCurrentConfig;
@@ -150,15 +149,6 @@
             settingsPanel.style.display = 'none';
             settingsOverlay.style.display = 'none';
         });
-
-        // === 表单值填充（消除重复） ===
-        function populateFormFromConfig(panel, config) {
-            panel.querySelector('#api-url').value = config.API_URL;
-            panel.querySelector('#api-key').value = config.API_KEY;
-            panel.querySelector('#max-tokens').value = config.MAX_TOKENS;
-            panel.querySelector('#prompt').value = config.PROMPT;
-            panel.querySelector('#model').value = config.MODEL;
-        }
 
         // === 配置选择与自动保存 ===
         const configSelect = settingsPanel.querySelector('#config-select');
@@ -524,13 +514,16 @@
         }
     }
 
+    function populateFormFromConfig(panel, config) {
+        panel.querySelector('#api-url').value = config.API_URL;
+        panel.querySelector('#api-key').value = config.API_KEY;
+        panel.querySelector('#max-tokens').value = config.MAX_TOKENS;
+        panel.querySelector('#prompt').value = config.PROMPT;
+        panel.querySelector('#model').value = config.MODEL;
+    }
+
     function refreshSettingsPanelValues(panel) {
-        const CONFIG = window.__AI_SUMMARY__.CONFIG;
-        panel.querySelector('#api-url').value = CONFIG.API_URL;
-        panel.querySelector('#api-key').value = CONFIG.API_KEY;
-        panel.querySelector('#max-tokens').value = CONFIG.MAX_TOKENS;
-        panel.querySelector('#prompt').value = CONFIG.PROMPT;
-        panel.querySelector('#model').value = CONFIG.MODEL;
+        populateFormFromConfig(panel, ctx.CONFIG);
     }
 
     ctx.initializeEvents = initializeEvents;

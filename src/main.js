@@ -1,6 +1,9 @@
 (function() {
     'use strict';
 
+    // 不在 iframe 内运行
+    if (window.self !== window.top) return;
+
     const ctx = window.__AI_SUMMARY__;
 
     // 1. 加载配置

@@ -45,8 +45,6 @@
     }
 
     ctx.getHistory = getHistory;
-    ctx.saveHistory = saveHistory;
     ctx.addHistory = addHistory;
     ctx.deleteHistory = deleteHistory;
-    ctx.clearHistory = clearHistory;
 })();

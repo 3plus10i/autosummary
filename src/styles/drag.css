@@ -1,35 +1,31 @@
-.ai-summary-container {
-    transition: transform 0.3s ease;
+/* 边缘指示器 */
+.ai-edge-indicator {
+    position: fixed;
+    top: 50%;
+    z-index: 99991;
+    width: 6px;
+    height: 36px;
+    cursor: pointer;
+    background: rgba(22, 119, 255, 0.12);
+    transition: background 0.2s, width 0.2s;
+    display: none;
 }
-.ai-summary-container.docked {
-    transition: all 0.3s ease;
+.ai-edge-indicator:hover {
+    background: rgba(22, 119, 255, 0.28);
+    width: 10px;
+}
+
+/* 拖拽中的容器 */
+.ai-summary-container {
+    transition: opacity 0.15s ease;
+}
+.ai-summary-container.near-edge {
+    opacity: 0.45;
+    pointer-events: none;
+}
+.ai-summary-container.hidden {
+    display: none;
 }
 .ai-drag-handle {
     pointer-events: auto !important;
-}
-.ai-summary-container.docked .ai-summary-btn span,
-.ai-summary-container.docked .ai-settings-quick-btn {
-    width: 0;
-    padding: 0;
-    overflow: hidden;
-    border: none;
-    opacity: 0;
-    transition: all 0.3s;
-}
-.ai-summary-container.docked.show-btn .ai-summary-btn span,
-.ai-summary-container.docked.show-btn .ai-settings-quick-btn {
-    width: auto;
-    padding: 6px 10px;
-    opacity: 1;
-}
-.ai-summary-container.docked.show-btn .ai-summary-btn {
-    padding: 6px 16px;
-}
-.ai-summary-container.right-dock {
-    right: 0 !important;
-    left: auto !important;
-}
-.ai-summary-container.left-dock {
-    left: 0 !important;
-    right: auto !important;
 }

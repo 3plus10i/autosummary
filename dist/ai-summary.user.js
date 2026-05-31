@@ -4,7 +4,7 @@
 // @version      2.0
 // @description  使用AI总结网页内容，提升浏览效率
 // @author       3plus10i
-// @icon         https://gh-proxy.org/https://github.com/3plus10i/autosummary/main/public/as.png
+// @icon         https://gh-proxy.org/https://github.com/3plus10i/autosummary/blob/main/public/as.png
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue

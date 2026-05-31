@@ -2,7 +2,7 @@
 // @name         AI网页内容总结
 // @namespace    http://tampermonkey.net/
 // @version      2.0
-// @description  使用AI总结网页内容，提升浏览效率
+// @description  在网页右下角添加一个常驻“总结网页”按钮，一键调用 AI 对当前页面进行快速总结。提升浏览效率。
 // @author       3plus10i
 // @icon         https://gh-proxy.org/https://github.com/3plus10i/autosummary/blob/main/public/as.png
 // @match        *://*/*

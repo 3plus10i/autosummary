@@ -4,14 +4,15 @@
     const ctx = window.__AI_SUMMARY__;
 
     function initializeEvents(elements) {
-        const { container, button, settingsQuickBtn, summaryPanel, dragHandle, settingsPanel, settingsOverlay, shadow, historyModal, historyOverlay } = elements;
+        const { container, button, settingsQuickBtn, summaryPanel, dragHandle, settingsPanel, settingsOverlay, shadow, historyModal, historyOverlay, aboutModal, aboutOverlay } = elements;
         const CONFIG = ctx.CONFIG;
-        const saveConfig = ctx.saveConfig;
         const getAllConfigs = ctx.getAllConfigs;
         const saveConfigAs = ctx.saveConfigAs;
         const loadSavedConfig = ctx.loadSavedConfig;
         const deleteConfig = ctx.deleteConfig;
         const renameConfig = ctx.renameConfig;
+        const updateCurrentConfig = ctx.updateCurrentConfig;
+        const applyConfig = ctx.applyConfig;
         const updateConfigSelectors = ctx.updateConfigSelectors;
         const getPageContent = ctx.getPageContent;
         const showError = ctx.showError;
@@ -19,6 +20,7 @@
         const initializeDrag = ctx.initializeDrag;
         const addHistory = ctx.addHistory;
         const refreshHistoryList = ctx.refreshHistoryList;
+        const estimateTokens = ctx.estimateTokens;
 
         // 初始化拖拽
         initializeDrag(container, dragHandle, shadow);
@@ -43,7 +45,10 @@
                     throw new Error('网页内容为空，无法生成总结。');
                 }
                 await summarizeContent(content, shadow, contentContainer);
-                finishLoading(summaryPanel);
+                // 估算token用量
+                var inputTokens = estimateTokens(content) + estimateTokens(CONFIG.PROMPT);
+                var outputTokens = estimateTokens(ctx.originalMarkdownText);
+                finishLoading(summaryPanel, inputTokens, outputTokens);
                 // 保存历史
                 addHistory(ctx.originalMarkdownText, window.location.href, document.title);
             } catch (error) {
@@ -119,7 +124,9 @@
                     throw new Error('网页内容为空，无法生成总结。');
                 }
                 await summarizeContent(content, shadow, contentContainer);
-                finishLoading(summaryPanel);
+                var inputTokens = estimateTokens(content) + estimateTokens(CONFIG.PROMPT);
+                var outputTokens = estimateTokens(ctx.originalMarkdownText);
+                finishLoading(summaryPanel, inputTokens, outputTokens);
                 addHistory(ctx.originalMarkdownText, window.location.href, document.title);
             } catch (error) {
                 showError(contentContainer, error.message);
@@ -144,127 +151,106 @@
             settingsOverlay.style.display = 'none';
         });
 
-        // 配置选择
+        // === 表单值填充（消除重复） ===
+        function populateFormFromConfig(panel, config) {
+            panel.querySelector('#api-url').value = config.API_URL;
+            panel.querySelector('#api-key').value = config.API_KEY;
+            panel.querySelector('#max-tokens').value = config.MAX_TOKENS;
+            panel.querySelector('#prompt').value = config.PROMPT;
+            panel.querySelector('#model').value = config.MODEL;
+        }
+
+        // === 配置选择与自动保存 ===
         const configSelect = settingsPanel.querySelector('#config-select');
-        configSelect.addEventListener('change', (e) => {
-            const selectedConfig = loadSavedConfig(e.target.value);
-            const hasSelection = e.target.value !== '';
-            if (selectedConfig) {
-                settingsPanel.querySelector('#api-url').value = selectedConfig.API_URL;
-                settingsPanel.querySelector('#api-key').value = selectedConfig.API_KEY;
-                settingsPanel.querySelector('#max-tokens').value = selectedConfig.MAX_TOKENS;
-                settingsPanel.querySelector('#prompt').value = selectedConfig.PROMPT;
-                settingsPanel.querySelector('#model').value = selectedConfig.MODEL;
+        const promptTemplateSelect = settingsPanel.querySelector('#prompt-template-select');
+        const promptTextarea = settingsPanel.querySelector('#prompt');
+
+        // 自动保存（去抖 500ms）
+        var autoSaveTimer = null;
+        var _savingConfigName = null;
+
+        function scheduleAutoSave() {
+            clearTimeout(autoSaveTimer);
+            _savingConfigName = configSelect.value;
+            autoSaveTimer = setTimeout(function() {
+                if (configSelect.value !== _savingConfigName) return;
+                if (!_savingConfigName || _savingConfigName === '__new__') return;
+                var changes = {
+                    API_URL: settingsPanel.querySelector('#api-url').value.trim(),
+                    API_KEY: settingsPanel.querySelector('#api-key').value.trim(),
+                    MAX_TOKENS: parseInt(settingsPanel.querySelector('#max-tokens').value) || 5000,
+                    PROMPT: promptTextarea.value.trim() || ctx.DEFAULT_CONFIG.PROMPT,
+                    MODEL: settingsPanel.querySelector('#model').value.trim() || ctx.DEFAULT_CONFIG.MODEL
+                };
+                updateCurrentConfig(changes);
+            }, 500);
+        }
+
+        ['#api-url', '#api-key', '#model', '#max-tokens'].forEach(function(sel) {
+            settingsPanel.querySelector(sel).addEventListener('input', scheduleAutoSave);
+        });
+        promptTextarea.addEventListener('input', scheduleAutoSave);
+
+        // 配置选择下拉
+        configSelect.addEventListener('change', function(e) {
+            var val = e.target.value;
+            if (val === '__new__') {
+                var allConfigs = getAllConfigs();
+                var idx = 1;
+                while (allConfigs['新配置' + idx]) idx++;
+                var newName = '新配置' + idx;
+                saveConfigAs(newName, { ...ctx.DEFAULT_CONFIG });
+                applyConfig(newName);
+                updateConfigSelectors(settingsPanel, summaryPanel);
+                configSelect.value = newName;
+                populateFormFromConfig(settingsPanel, ctx.CONFIG);
+                settingsPanel.querySelector('.delete-config-btn').style.display = 'inline-block';
+                settingsPanel.querySelector('.rename-config-btn').style.display = 'inline-block';
+                return;
+            }
+            var hasSelection = val !== '';
+            if (hasSelection && applyConfig(val)) {
+                updateConfigSelectors(settingsPanel, summaryPanel);
+                populateFormFromConfig(settingsPanel, ctx.CONFIG);
             }
             settingsPanel.querySelector('.delete-config-btn').style.display = hasSelection ? 'inline-block' : 'none';
             settingsPanel.querySelector('.rename-config-btn').style.display = hasSelection ? 'inline-block' : 'none';
         });
 
-        // 提示词模版选择
-        const promptTemplateSelect = settingsPanel.querySelector('#prompt-template-select');
-        const promptTextarea = settingsPanel.querySelector('#prompt');
-        promptTemplateSelect.addEventListener('change', (e) => {
-            const selected = ctx.PROMPT_TEMPLATES.find(t => t.title === e.target.value);
+        // 提示词模板选择（触发自动保存）
+        promptTemplateSelect.addEventListener('change', function(e) {
+            var selected = ctx.PROMPT_TEMPLATES.find(function(t) { return t.title === e.target.value; });
             if (selected) {
                 promptTextarea.value = selected.content;
+                scheduleAutoSave();
             }
         });
 
-        // 保存并应用
-        settingsPanel.querySelector('.save-btn').addEventListener('click', () => {
-            const selectedConfigName = configSelect.value;
-            const newConfig = {
-                API_URL: settingsPanel.querySelector('#api-url').value.trim(),
-                API_KEY: settingsPanel.querySelector('#api-key').value.trim(),
-                MAX_TOKENS: parseInt(settingsPanel.querySelector('#max-tokens').value) || 5000,
-                PROMPT: promptTextarea.value.trim() || ctx.DEFAULT_CONFIG.PROMPT,
-                MODEL: settingsPanel.querySelector('#model').value.trim() || 'gpt-4o-mini'
-            };
-            saveConfig(newConfig, selectedConfigName);
-            updateConfigSelectors(settingsPanel, summaryPanel);
-            settingsPanel.style.display = 'none';
-            settingsOverlay.style.display = 'none';
-            alert('配置已保存并应用' + (selectedConfigName ? '（当前配置：' + selectedConfigName + '）' : ''));
-        });
-
-        // 清除缓存
-        settingsPanel.querySelector('.clear-cache-btn').addEventListener('click', () => {
-            const keys = ['API_URL', 'API_KEY', 'MAX_TOKENS', 'PROMPT', 'MODEL', 'saved_configs', 'CURRENT_CONFIG_NAME', 'containerPosition'];
-            keys.forEach(key => GM_setValue(key, undefined));
-            const defaultCfg = ctx.DEFAULT_CONFIG;
-            ctx.CONFIG = { ...defaultCfg };
-            settingsPanel.querySelector('#api-url').value = defaultCfg.API_URL;
-            settingsPanel.querySelector('#api-key').value = defaultCfg.API_KEY;
-            settingsPanel.querySelector('#max-tokens').value = defaultCfg.MAX_TOKENS;
-            promptTextarea.value = defaultCfg.PROMPT;
-            settingsPanel.querySelector('#model').value = defaultCfg.MODEL;
-            updateConfigSelectors(settingsPanel, summaryPanel);
-            alert('已恢复默认设置，请重新配置API信息。');
-        });
-
-        // 另存为新配置
-        settingsPanel.querySelector('.save-as-btn').addEventListener('click', () => {
-            const saveAsGroup = settingsPanel.querySelector('.save-as-group');
-            saveAsGroup.style.display = 'block';
-            settingsPanel.querySelector('#config-name').focus();
-        });
-        settingsPanel.querySelector('.cancel-save-as-btn').addEventListener('click', () => {
-            settingsPanel.querySelector('.save-as-group').style.display = 'none';
-            settingsPanel.querySelector('#config-name').value = '';
-        });
-        settingsPanel.querySelector('.confirm-save-as-btn').addEventListener('click', () => {
-            const configName = settingsPanel.querySelector('#config-name').value.trim();
-            saveCurrentConfigAs(configName);
-        });
-        settingsPanel.querySelector('#config-name').addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') {
-                saveCurrentConfigAs(e.target.value.trim());
-            }
-        });
-
-        function saveCurrentConfigAs(configName) {
-            if (!configName) return;
-            const newConfig = {
-                API_URL: settingsPanel.querySelector('#api-url').value.trim(),
-                API_KEY: settingsPanel.querySelector('#api-key').value.trim(),
-                MAX_TOKENS: parseInt(settingsPanel.querySelector('#max-tokens').value) || 5000,
-                PROMPT: promptTextarea.value.trim() || ctx.DEFAULT_CONFIG.PROMPT,
-                MODEL: settingsPanel.querySelector('#model').value.trim() || 'gpt-4o-mini'
-            };
-            if (getAllConfigs()[configName] && !confirm('配置"' + configName + '"已存在，是否覆盖？')) return;
-            saveConfigAs(configName, newConfig);
-            ctx.CONFIG = { ...newConfig, CURRENT_CONFIG_NAME: configName };
-            GM_setValue('CURRENT_CONFIG_NAME', configName);
-            updateConfigSelectors(settingsPanel, summaryPanel);
-            settingsPanel.querySelector('.save-as-group').style.display = 'none';
-            settingsPanel.querySelector('#config-name').value = '';
-            alert('配置已保存并设为当前配置');
-        }
-
-        // 删除配置
-        settingsPanel.querySelector('.delete-config-btn').addEventListener('click', () => {
-            const configName = configSelect.value;
+        // 删除配置（最后一个被删时 storage 层自动创建默认配置）
+        settingsPanel.querySelector('.delete-config-btn').addEventListener('click', function() {
+            var configName = configSelect.value;
             if (!configName) { alert('请先选择要删除的配置'); return; }
             if (confirm('确定要删除配置"' + configName + '"吗？')) {
-                deleteConfig(configName, settingsPanel, summaryPanel);
+                deleteConfig(configName);
                 updateConfigSelectors(settingsPanel, summaryPanel);
+                refreshSettingsPanelValues(settingsPanel);
             }
         });
 
-        // 重命名
-        settingsPanel.querySelector('.rename-config-btn').addEventListener('click', () => {
-            const name = configSelect.value;
+        // 重命名配置
+        settingsPanel.querySelector('.rename-config-btn').addEventListener('click', function() {
+            var name = configSelect.value;
             if (!name) { alert('请先选择要重命名的配置'); return; }
-            const renameGroup = settingsPanel.querySelector('.rename-group');
-            const renameInput = settingsPanel.querySelector('#rename-config');
+            var renameGroup = settingsPanel.querySelector('.rename-group');
+            var renameInput = settingsPanel.querySelector('#rename-config');
             renameInput.value = name;
             renameGroup.style.display = 'block';
             renameInput.focus();
             renameInput.select();
         });
-        settingsPanel.querySelector('.confirm-rename-btn').addEventListener('click', () => {
-            const oldName = configSelect.value;
-            const newName = settingsPanel.querySelector('#rename-config').value.trim();
+        settingsPanel.querySelector('.confirm-rename-btn').addEventListener('click', function() {
+            var oldName = configSelect.value;
+            var newName = settingsPanel.querySelector('#rename-config').value.trim();
             if (!oldName) return;
             if (!newName) { alert('请输入新配置名称'); return; }
             if (oldName === newName) return;
@@ -273,30 +259,39 @@
                 updateConfigSelectors(settingsPanel, summaryPanel);
                 settingsPanel.querySelector('.rename-group').style.display = 'none';
                 settingsPanel.querySelector('#rename-config').value = '';
+                refreshSettingsPanelValues(settingsPanel);
             }
         });
-        settingsPanel.querySelector('.cancel-rename-btn').addEventListener('click', () => {
+        settingsPanel.querySelector('.cancel-rename-btn').addEventListener('click', function() {
             settingsPanel.querySelector('.rename-group').style.display = 'none';
             settingsPanel.querySelector('#rename-config').value = '';
         });
 
-        // 总结面板中的配置选择
-        summaryPanel.querySelector('.ai-config-select').addEventListener('change', async (e) => {
-            const configName = e.target.value;
-            if (configName) {
-                const selectedConfig = loadSavedConfig(configName);
-                if (selectedConfig) {
-                    saveConfig({ ...selectedConfig }, configName);
-                    summaryPanel.querySelector('.ai-retry-btn').click();
-                }
-            } else {
-                saveConfig(ctx.CONFIG, '');
+        // 总结面板配置切换：仅应用配置，不自动触发总结
+        summaryPanel.querySelector('.ai-config-select').addEventListener('change', function(e) {
+            var configName = e.target.value;
+            if (configName && applyConfig(configName)) {
+                updateConfigSelectors(settingsPanel, summaryPanel);
             }
-            updateConfigSelectors(settingsPanel, summaryPanel);
         });
 
-        // 初始化更新选择器
+        // 初始化下拉框
         updateConfigSelectors(settingsPanel, summaryPanel);
+
+        // === 关于按钮 ===
+        settingsPanel.querySelector('.about-btn').addEventListener('click', () => {
+            ctx.showAboutModal(aboutModal, aboutOverlay);
+        });
+
+        // === 关于弹窗关闭 ===
+        aboutOverlay.addEventListener('click', () => {
+            aboutModal.style.display = 'none';
+            aboutOverlay.style.display = 'none';
+        });
+        aboutModal.querySelector('.ai-about-close').addEventListener('click', () => {
+            aboutModal.style.display = 'none';
+            aboutOverlay.style.display = 'none';
+        });
 
         // === 历史总结按钮（设置面板） ===
         settingsPanel.querySelector('.history-btn').addEventListener('click', () => {
@@ -318,56 +313,39 @@
             historyOverlay.style.display = 'none';
         });
 
-        // 列表项点击
+        // 列表项点击（选中、打开链接、删除）
         historyModal.querySelector('.ai-history-list').addEventListener('click', (e) => {
             const item = e.target.closest('.ai-history-item');
             if (!item) return;
-            // 高亮
+
+            // 删除按钮
+            const delBtn = e.target.closest('.ai-history-delete-btn');
+            if (delBtn) {
+                e.stopPropagation();
+                ctx.deleteHistory(delBtn.dataset.id);
+                ctx.refreshHistoryList(historyModal);
+                return;
+            }
+
+            // 打开按钮 → 新标签页打开
+            const openBtn = e.target.closest('.ai-history-open-btn');
+            if (openBtn) {
+                e.stopPropagation();
+                const history = ctx.getHistory();
+                const entry = history.find(h => h.id === item.dataset.id);
+                if (entry && entry.url) {
+                    window.open(entry.url, '_blank');
+                }
+                return;
+            }
+
+            // 默认：选中并显示内容
             historyModal.querySelectorAll('.ai-history-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
-            // 显示内容
             const id = item.dataset.id;
             const history = ctx.getHistory();
             const entry = history.find(h => h.id === id);
             ctx.showHistoryContent(historyModal, entry);
-        });
-
-        // 点击历史项URL → 复制链接
-        historyModal.querySelector('.ai-history-list').addEventListener('click', (e) => {
-            const urlEl = e.target.closest('.ai-history-item-url');
-            const openBtn = e.target.closest('.ai-history-open-btn');
-            // 只有打开按钮才跳转
-            if (openBtn) {
-                const item = openBtn.closest('.ai-history-item');
-                if (!item) return;
-                const id = item.dataset.id;
-                const history = ctx.getHistory();
-                const entry = history.find(h => h.id === id);
-                if (entry && entry.url) {
-                    window.open(entry.url, '_blank');
-                }
-                e.stopPropagation();
-                return;
-            }
-            // URL点击 → 复制
-            if (urlEl) {
-                const item = urlEl.closest('.ai-history-item');
-                if (!item) return;
-                const id = item.dataset.id;
-                const history = ctx.getHistory();
-                const entry = history.find(h => h.id === id);
-                if (entry && entry.url) {
-                    navigator.clipboard.writeText(entry.url).then(() => {
-                        urlEl.textContent = '已复制！';
-                        urlEl.style.color = '#52c41a';
-                        setTimeout(() => {
-                            urlEl.textContent = entry.url.replace(/</g, '&lt;');
-                            urlEl.style.color = '';
-                        }, 1500);
-                    }).catch(() => {});
-                }
-                e.stopPropagation();
-            }
         });
     }
 
@@ -523,11 +501,27 @@
         if (title) title.textContent = '正在总结网页...';
     }
 
-    function finishLoading(panel) {
+    function formatTokenCount(n) {
+        if (n >= 1000) {
+            var k = n / 1000;
+            return k >= 100 ? k.toFixed(0) + 'k' : k.toFixed(1) + 'k';
+        }
+        return String(n);
+    }
+
+    function finishLoading(panel, inputTokens, outputTokens) {
         panel.classList.remove('loading');
         panel.classList.add('has-content');
         const title = panel.querySelector('.ai-panel-title');
-        if (title) title.textContent = '网页总结';
+        if (title) {
+            if (inputTokens != null) {
+                var inp = formatTokenCount(inputTokens);
+                var out = formatTokenCount(outputTokens);
+                title.innerHTML = '网页总结 <span class="ai-token-info">\u2191 ' + inp + ' tokens &nbsp; \u2193 ' + out + ' tokens</span>';
+            } else {
+                title.textContent = '网页总结';
+            }
+        }
     }
 
     function refreshSettingsPanelValues(panel) {

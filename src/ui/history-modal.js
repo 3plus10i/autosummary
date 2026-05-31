@@ -38,6 +38,7 @@
 
         if (!history.length) {
             listEl.innerHTML = '<div class="ai-history-list-empty">暂无历史总结记录</div>';
+            modal.querySelector('.ai-history-content').innerHTML = '<div class="ai-history-content-empty">暂无历史总结记录</div>';
             return;
         }
 
@@ -47,21 +48,26 @@
                 hour: '2-digit', minute: '2-digit', second: '2-digit'
             });
             const title = entry.title || '无标题';
-            const url = entry.url || '';
             const isActive = idx === 0 ? ' active' : '';
             return `
                 <div class="ai-history-item${isActive}" data-id="${entry.id}">
-                    <button class="ai-history-open-btn" title="在新标签页打开" data-url="${url.replace(/"/g, '&quot;')}">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                        <span>打开</span>
-                    </button>
-                    <div class="ai-history-item-time">${timeStr}</div>
+                    <div class="ai-history-item-btns">
+                        <button class="ai-history-delete-btn" title="删除此记录" data-id="${entry.id}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                        <button class="ai-history-open-btn" title="在新标签页打开" data-id="${entry.id}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="ai-history-item-time">[${idx + 1}] ${timeStr}</div>
                     <div class="ai-history-item-title">${title}</div>
-                    ${url ? '<div class="ai-history-item-url">' + url.replace(/</g, '&lt;') + '</div>' : ''}
                 </div>`;
         }).join('');
 

@@ -7,7 +7,6 @@
         const CONFIG = ctx.CONFIG;
         const typeWriter = ctx.typeWriter;
         const markdownRenderer = ctx.markdownRenderer;
-        const normalizeApiUrl = ctx.normalizeApiUrl;
 
         contentContainer.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div><span>正在生成总结...</span></div>';
 
@@ -17,7 +16,11 @@
         }, 30000);
 
         try {
-            const apiUrl = normalizeApiUrl(CONFIG.API_URL);
+            // 执行层追加 /chat/completions 后缀，config 中不保存此后缀
+            var apiUrl = CONFIG.API_URL;
+            if (apiUrl && !apiUrl.endsWith('/chat/completions')) {
+                apiUrl = apiUrl.replace(/\/+$/, '') + '/chat/completions';
+            }
 
             // DEBUG: 打印发送给AI的网页内容
             console.log('[AI Summary] 发送的网页内容:', content);

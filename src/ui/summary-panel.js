@@ -186,7 +186,6 @@
             <div class="ai-panel-footer">
                 <span class="ai-config-label">当前配置：</span>
                 <select class="ai-config-select">
-                    <option value="">当前配置</option>
                     ${Object.keys(getAllConfigs()).map(name =>
                         '<option value="' + name + '">' + name + '</option>'
                     ).join('')}
@@ -221,7 +220,7 @@
         `;
 
         // 创建设置面板
-        const { panel: settingsPanel, overlay: settingsOverlay } = createSettingsPanel(shadow);
+        const { panel: settingsPanel, overlay: settingsOverlay, aboutModal, aboutOverlay } = createSettingsPanel(shadow);
 
         // 组装到Shadow DOM
         shadow.appendChild(mainStyle);
@@ -241,6 +240,8 @@
             dragHandle: container.querySelector('.ai-drag-handle'),
             settingsPanel,
             settingsOverlay,
+            aboutModal,
+            aboutOverlay,
             shadow
         };
     }

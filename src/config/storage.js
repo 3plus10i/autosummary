@@ -6,81 +6,104 @@
 
     let CONFIG = {};
 
+    // ===== 单一真相源：saved_configs + CURRENT_CONFIG_NAME =====
+
     function loadConfig() {
-        CONFIG = {
-            API_URL: GM_getValue('API_URL', DEFAULT_CONFIG.API_URL),
-            API_KEY: GM_getValue('API_KEY', DEFAULT_CONFIG.API_KEY),
-            MAX_TOKENS: GM_getValue('MAX_TOKENS', DEFAULT_CONFIG.MAX_TOKENS),
-            PROMPT: GM_getValue('PROMPT', DEFAULT_CONFIG.PROMPT),
-            MODEL: GM_getValue('MODEL', DEFAULT_CONFIG.MODEL),
-            CURRENT_CONFIG_NAME: GM_getValue('CURRENT_CONFIG_NAME', DEFAULT_CONFIG.CURRENT_CONFIG_NAME)
-        };
-        if (CONFIG.CURRENT_CONFIG_NAME) {
-            const savedConfig = loadSavedConfig(CONFIG.CURRENT_CONFIG_NAME);
-            if (savedConfig) {
-                CONFIG = { ...savedConfig, CURRENT_CONFIG_NAME: CONFIG.CURRENT_CONFIG_NAME };
+        const configs = GM_getValue('saved_configs', {});
+        let configName = GM_getValue('CURRENT_CONFIG_NAME', '');
+
+        // 若无有效配置 → 自动创建默认配置
+        if (!configName || !configs[configName]) {
+            const names = Object.keys(configs);
+            if (names.length > 0) {
+                configName = names[0];
+                GM_setValue('CURRENT_CONFIG_NAME', configName);
+            } else {
+                configName = _ensureDefaultExists(configs);
             }
         }
+
+        CONFIG = { ...configs[configName], CURRENT_CONFIG_NAME: configName };
         ctx.CONFIG = CONFIG;
         return CONFIG;
     }
 
-    function saveConfig(newConfig, configName) {
-        if (configName === undefined) configName = '';
-        Object.keys(newConfig).forEach(key => {
-            GM_setValue(key, newConfig[key]);
-        });
-        if (configName) {
-            GM_setValue('CURRENT_CONFIG_NAME', configName);
-            const savedConfigs = getAllConfigs();
-            savedConfigs[configName] = { ...newConfig };
-            GM_setValue('saved_configs', savedConfigs);
-        }
-        CONFIG = { ...CONFIG, ...newConfig, CURRENT_CONFIG_NAME: configName || CONFIG.CURRENT_CONFIG_NAME };
+    // ===== 实时保存（表单字段变更时调用） =====
+    function updateCurrentConfig(changes) {
+        const name = CONFIG.CURRENT_CONFIG_NAME;
+        if (!name) return;
+
+        const configs = GM_getValue('saved_configs', {});
+        configs[name] = { ...configs[name], ...changes };
+        GM_setValue('saved_configs', configs);
+        CONFIG = { ...configs[name], CURRENT_CONFIG_NAME: name };
         ctx.CONFIG = CONFIG;
     }
 
+    // ===== 应用配置（总结面板下拉切换） =====
+    function applyConfig(name) {
+        const configs = GM_getValue('saved_configs', {});
+        if (!configs[name]) return false;
+
+        GM_setValue('CURRENT_CONFIG_NAME', name);
+        CONFIG = { ...configs[name], CURRENT_CONFIG_NAME: name };
+        ctx.CONFIG = CONFIG;
+        return true;
+    }
+
+    // ===== 读取 =====
     function getAllConfigs() {
         return GM_getValue('saved_configs', {});
     }
 
-    function saveConfigAs(name, config) {
-        const configs = getAllConfigs();
-        configs[name] = config;
-        GM_setValue('saved_configs', configs);
-    }
-
     function loadSavedConfig(name) {
-        const configs = getAllConfigs();
-        return configs[name];
+        const configs = GM_getValue('saved_configs', {});
+        return configs[name] || null;
     }
 
-    function deleteConfig(name) {
-        const configs = getAllConfigs();
-        delete configs[name];
+    // ===== 创建 =====
+    function saveConfigAs(name, config) {
+        const configs = GM_getValue('saved_configs', {});
+        configs[name] = { ...config };
         GM_setValue('saved_configs', configs);
+    }
+
+    // ===== 删除（最后一个被删时自动创建默认配置） =====
+    function deleteConfig(name) {
+        const configs = GM_getValue('saved_configs', {});
+        const names = Object.keys(configs);
+        const deletedIdx = names.indexOf(name);
+        delete configs[name];
+
         if (name === CONFIG.CURRENT_CONFIG_NAME) {
-            const defaultConfig = { ...DEFAULT_CONFIG, CURRENT_CONFIG_NAME: '' };
-            Object.keys(defaultConfig).forEach(key => {
-                GM_setValue(key, defaultConfig[key]);
-            });
-            CONFIG = defaultConfig;
-            ctx.CONFIG = defaultConfig;
+            const remaining = names.filter(function(n) { return n !== name; });
+            if (remaining.length > 0) {
+                const fallbackName = deletedIdx > 0 ? names[deletedIdx - 1] : remaining[0];
+                CONFIG = { ...configs[fallbackName], CURRENT_CONFIG_NAME: fallbackName };
+                GM_setValue('CURRENT_CONFIG_NAME', fallbackName);
+            } else {
+                // 所有配置已删除 → 自动创建默认配置
+                _ensureDefaultExists(configs);
+                CONFIG = { ...configs['默认配置'], CURRENT_CONFIG_NAME: '默认配置' };
+                GM_setValue('CURRENT_CONFIG_NAME', '默认配置');
+            }
+            ctx.CONFIG = CONFIG;
         }
+
         GM_setValue('saved_configs', configs);
         return Object.keys(configs).length;
     }
 
+    // ===== 重命名 =====
     function renameConfig(oldName, newName) {
         if (oldName === newName) return false;
-        const configs = getAllConfigs();
-        if (!configs[oldName]) {
-            alert('找不到要重命名的配置');
-            return false;
-        }
+        const configs = GM_getValue('saved_configs', {});
+        if (!configs[oldName]) return false;
+
         configs[newName] = configs[oldName];
         delete configs[oldName];
         GM_setValue('saved_configs', configs);
+
         if (CONFIG.CURRENT_CONFIG_NAME === oldName) {
             CONFIG.CURRENT_CONFIG_NAME = newName;
             GM_setValue('CURRENT_CONFIG_NAME', newName);
@@ -88,56 +111,64 @@
         return true;
     }
 
-    // 将API端点规范化：如果未以/chat/completions结尾则自动追加
-    function normalizeApiUrl(url) {
-        if (!url) return url;
-        if (!url.endsWith('/chat/completions')) {
-            return url.replace(/\/+$/, '') + '/chat/completions';
-        }
-        return url;
-    }
-
+    // ===== 导出 =====
     function updateConfigSelectors(settingsPanel, summaryPanel) {
         const configs = getAllConfigs();
         const configNames = Object.keys(configs);
         const currentConfigName = CONFIG.CURRENT_CONFIG_NAME;
 
-        const updateSelect = (select, includeCurrentConfig) => {
-            if (!select) return;
-            let options = [];
-            if (includeCurrentConfig) {
-                options.push(`<option value="" ${!currentConfigName ? 'selected' : ''}>当前配置${!currentConfigName ? '（未保存）' : ''}</option>`);
-            } else {
-                options.push(`<option value="">--选择配置--</option>`);
-            }
-            options = options.concat(configNames.map(name =>
-                `<option value="${name}" ${name === currentConfigName ? 'selected' : ''}>${name}</option>`
-            ));
-            select.innerHTML = options.join('');
-        };
-
+        // 设置面板：含"+ 新建配置"
         if (settingsPanel) {
             const sel = settingsPanel.querySelector('#config-select');
-            updateSelect(sel, false);
-            const configSelected = sel && sel.value !== '';
-            const deleteBtn = settingsPanel.querySelector('.delete-config-btn');
-            const renameBtn = settingsPanel.querySelector('.rename-config-btn');
-            if (deleteBtn) deleteBtn.style.display = configSelected ? 'inline-block' : 'none';
-            if (renameBtn) renameBtn.style.display = configSelected ? 'inline-block' : 'none';
+            if (sel) {
+                var options = configNames.map(function(name) {
+                    return '<option value="' + name + '" ' +
+                        (name === currentConfigName ? 'selected' : '') + '>' + name + '</option>';
+                });
+                options.push('<option value="__new__">+ 新建配置</option>');
+                sel.innerHTML = options.join('');
+
+                var configSelected = sel.value !== '' && sel.value !== '__new__';
+                var deleteBtn = settingsPanel.querySelector('.delete-config-btn');
+                var renameBtn = settingsPanel.querySelector('.rename-config-btn');
+                if (deleteBtn) deleteBtn.style.display = configSelected ? 'inline-block' : 'none';
+                if (renameBtn) renameBtn.style.display = configSelected ? 'inline-block' : 'none';
+            }
         }
+
+        // 总结面板：仅列出已保存配置（用于切换应用）
         if (summaryPanel) {
-            const sel = summaryPanel.querySelector('.ai-config-select');
-            updateSelect(sel, true);
+            var sel = summaryPanel.querySelector('.ai-config-select');
+            if (sel) {
+                var options = configNames.map(function(name) {
+                    return '<option value="' + name + '" ' +
+                        (name === currentConfigName ? 'selected' : '') + '>' + name + '</option>';
+                });
+                sel.innerHTML = options.join('');
+            }
         }
     }
 
+    // ===== 内部：确保至少存在一个默认配置 =====
+    function _ensureDefaultExists(configs) {
+        if (!configs) configs = GM_getValue('saved_configs', {});
+        var name = '默认配置';
+        if (!configs[name]) {
+            configs[name] = { ...DEFAULT_CONFIG };
+        }
+        GM_setValue('saved_configs', configs);
+        GM_setValue('CURRENT_CONFIG_NAME', name);
+        return name;
+    }
+
+    // ===== 导出 =====
     ctx.loadConfig = loadConfig;
-    ctx.saveConfig = saveConfig;
+    ctx.updateCurrentConfig = updateCurrentConfig;
+    ctx.applyConfig = applyConfig;
     ctx.getAllConfigs = getAllConfigs;
-    ctx.saveConfigAs = saveConfigAs;
     ctx.loadSavedConfig = loadSavedConfig;
+    ctx.saveConfigAs = saveConfigAs;
     ctx.deleteConfig = deleteConfig;
     ctx.renameConfig = renameConfig;
-    ctx.normalizeApiUrl = normalizeApiUrl;
     ctx.updateConfigSelectors = updateConfigSelectors;
 })();

@@ -20,6 +20,7 @@ const JS_MODULES = [
   'utils/shortcut.js',
   'utils/markdown.js',
   'utils/history.js',
+  'utils/token.js',
   'utils/drag.js',
   'ui/settings-panel.js',
   'ui/summary-panel.js',
@@ -54,6 +55,15 @@ function escapeForStringLiteral(cssContent) {
     .replace(/\$/g, '\\$');
 }
 
+function extractAboutContent() {
+  const readmePath = path.join(__dirname, 'README.md');
+  if (!fs.existsSync(readmePath)) return '# AI网页内容总结\n\n油猴脚本，一键 AI 总结网页内容。';
+  const readme = fs.readFileSync(readmePath, 'utf-8');
+  const splitMarker = '## 快速开始';
+  const idx = readme.indexOf(splitMarker);
+  return (idx >= 0 ? readme.substring(0, idx) : readme).trim();
+}
+
 function build() {
   console.log('Building AI Summary Userscript...\n');
 
@@ -72,7 +82,7 @@ function build() {
     let content = readFile(modulePath);
     console.log(`  [js]       ] ${modulePath}`);
 
-    // 3. 检查该JS文件是否需要注入CSS
+    // 检查该JS文件是否需要注入CSS
     for (const [cssFile, cfg] of Object.entries(CSS_FILES)) {
       if (cfg.target === modulePath && content.includes(cfg.marker)) {
         const cssContent = readFile('styles/' + cssFile);
@@ -83,6 +93,15 @@ function build() {
     }
 
     jsModulesContent += '\n' + content + '\n';
+  }
+
+  // 3. 注入README关于内容（截取"快速开始"之前部分）
+  const aboutContent = extractAboutContent();
+  const escapedAbout = escapeForStringLiteral(aboutContent);
+  const aboutPlaceholder = '"ABOUT_CONTENT_PLACEHOLDER"';
+  if (jsModulesContent.includes(aboutPlaceholder)) {
+    jsModulesContent = jsModulesContent.replace(aboutPlaceholder, '`' + escapedAbout + '`');
+    console.log('  [readme]    -> README.md about section injected');
   }
 
   // 4. 组装完整脚本

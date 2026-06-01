@@ -15,6 +15,7 @@ const OUTPUT_FILE = path.join(DIST_DIR, 'ai-summary.user.js');
 const JS_MODULES = [
   'config/defaults.js',
   'config/storage.js',
+  'utils/ai-service.js',
   'config/templates.js',
   'utils/content.js',
   'utils/markdown.js',

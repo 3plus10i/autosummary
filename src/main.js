@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    // 不在 iframe 内运行
+    // 要求不在 iframe 内运行，避免在 iframe 中也显示按钮
     if (window.self !== window.top) return;
 
     const ctx = window.__AI_SUMMARY__;
@@ -19,7 +19,4 @@
 
     // 4. 初始化事件
     ctx.initializeEvents(elements);
-
-    // 5. 检查配置是否完整 - 不再弹出自动设置面板，
-    //    而是让用户点总结按钮时提示配置
 })();

@@ -29,12 +29,12 @@
 
         // === 总结按钮点击 ===
         button.addEventListener('click', async () => {
-            if (!CONFIG.API_KEY || !CONFIG.API_URL) {
-                alert('请先配置API URL和API Key。');
-                settingsPanel.style.display = 'block';
-                settingsOverlay.style.display = 'block';
-                return;
-            }
+            // if (!CONFIG.API_KEY || !CONFIG.API_URL) {
+            //     alert('请先配置API URL和API Key。');
+            //     settingsPanel.style.display = 'block';
+            //     settingsOverlay.style.display = 'block';
+            //     return;
+            // }
             openSummaryPanel(summaryPanel);
             startLoading(summaryPanel);
             const contentContainer = summaryPanel.querySelector('.ai-summary-content');

@@ -3,8 +3,52 @@
 
     const ctx = window.__AI_SUMMARY__;
 
+    /** AI路由 */
+    function shouldUseBuiltinAI() {
+        const configs = ctx.getAllConfigs();
+        const names = Object.keys(configs);
+        if (names.length !== 1) return false;
+        const cfg = configs[names[0]];
+        const def = ctx.DEFAULT_CONFIG;
+        return Object.keys(def).every(function(k) { return cfg[k] === def[k]; });
+    }
+
+    /** AIService */
+    async function summarizeWithBuiltinAI(content, shadow, contentContainer) {
+        const CONFIG = ctx.CONFIG;
+        const typeWriter = ctx.typeWriter;
+
+        contentContainer.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div><span>正在生成总结...</span></div>';
+
+        const timeoutId = setTimeout(function() {
+            contentContainer.innerHTML = '<div class="ai-summary-error"><strong>错误：</strong>请求超时</div>';
+        }, 30000);
+
+        try {
+            const AIService = ctx.AIService;
+            await AIService.init();
+            const ai = new AIService();
+            const summary = await ai.chat(content, CONFIG.PROMPT);
+
+            clearTimeout(timeoutId);
+            ctx.originalMarkdownText = summary;
+            typeWriter(contentContainer, summary, 30, 5);
+            return summary;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            console.error('总结出错:', error);
+            ctx.showError(contentContainer, error.message);
+            throw error;
+        }
+    }
+
     async function summarizeContent(content, shadow, contentContainer) {
         const CONFIG = ctx.CONFIG;
+
+        if (shouldUseBuiltinAI()) {
+            return summarizeWithBuiltinAI(content, shadow, contentContainer);
+        }
+
         const typeWriter = ctx.typeWriter;
 
         contentContainer.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div><span>正在生成总结...</span></div>';

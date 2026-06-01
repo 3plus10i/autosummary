@@ -131,9 +131,9 @@
     function initializeDrag(container, dragHandle, shadow) {
         var isDragging = false, startX, startY, offsetX, offsetY, nearSide = '';
 
-        var style = document.createElement('style');
-        style.textContent = `/* CSS_DRAG_PLACEHOLDER */`;
-        shadow.appendChild(style);
+        var sheet = new CSSStyleSheet();
+        sheet.replaceSync(`/* CSS_DRAG_PLACEHOLDER */`);
+        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
 
         loadPosition(container);
 

@@ -74,10 +74,10 @@
                     ).join('')}
                     <option value="__new__">+ 新建配置</option>
                 </select>
-                <button class="delete-config-btn" style="display: none;">删除</button>
-                <button class="rename-config-btn" style="display: none;">重命名</button>
+                <button class="delete-config-btn">删除</button>
+                <button class="rename-config-btn">重命名</button>
             </div>
-            <div class="form-group rename-group" style="display: none;">
+            <div class="form-group rename-group">
                 <label for="rename-config">重命名配置</label>
                 <div class="rename-input-group">
                     <input type="text" id="rename-config" placeholder="输入新配置名称">
@@ -109,16 +109,21 @@
             </div>
         `;
 
-        const style = document.createElement('style');
-        style.textContent = `/* CSS_SETTINGS_PLACEHOLDER */`;
-        shadow.appendChild(style);
+        var sheet = new CSSStyleSheet();
+        sheet.replaceSync(`/* CSS_SETTINGS_PLACEHOLDER */`);
+        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
+
+        // 默认隐藏元素（避免 inline style 触发 CSP）
+        var sheetReset = new CSSStyleSheet();
+        sheetReset.replaceSync(`.delete-config-btn,.rename-config-btn,.rename-group{display:none}`);
+        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheetReset];
 
         const settingsOverlay = document.createElement('div');
         settingsOverlay.className = 'ai-settings-overlay';
         settingsOverlay.style.display = 'none';
 
-        const overlayStyle = document.createElement('style');
-        overlayStyle.textContent = `
+        var sheet2 = new CSSStyleSheet();
+        sheet2.replaceSync(`
             .ai-settings-overlay {
                 display: none;
                 position: fixed;
@@ -129,8 +134,8 @@
                 background: rgba(0, 0, 0, 0.45);
                 z-index: 100000;
             }
-        `;
-        shadow.appendChild(overlayStyle);
+        `);
+        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet2];
         shadow.appendChild(settingsOverlay);
         shadow.appendChild(panel);
 

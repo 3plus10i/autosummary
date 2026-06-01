@@ -23,9 +23,9 @@
             </div>
         `;
 
-        const style = document.createElement('style');
-        style.textContent = `/* CSS_HISTORY_PLACEHOLDER */`;
-        shadow.appendChild(style);
+        var sheet = new CSSStyleSheet();
+        sheet.replaceSync(`/* CSS_HISTORY_PLACEHOLDER */`);
+        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
         shadow.appendChild(overlay);
         shadow.appendChild(modal);
 

@@ -12,9 +12,12 @@
         rootContainer.id = 'ai-summary-root';
         const shadow = rootContainer.attachShadow({ mode: 'open' });
 
-        // === 样式 ===
-        const mainStyle = document.createElement('style');
-        mainStyle.textContent = `/* CSS_SUMMARY_PLACEHOLDER */`;
+        // === 样式（adoptedStyleSheets，兼容CSP） ===
+        (function() {
+            var sheet = new CSSStyleSheet();
+            sheet.replaceSync(`/* CSS_SUMMARY_PLACEHOLDER */`);
+            shadow.adoptedStyleSheets = [sheet];
+        })();
 
         // === 浮动按钮容器（右下角常驻） ===
         const container = document.createElement('div');
@@ -36,9 +39,10 @@
             </button>
         `;
 
-        // 浮动按钮样式
-        const btnStyle = document.createElement('style');
-        btnStyle.textContent = `
+        // 浮动按钮样式（adoptedStyleSheets）
+        (function() {
+            var sheet2 = new CSSStyleSheet();
+            sheet2.replaceSync(`
             .ai-summary-container {
                 position: fixed;
                 display: flex;
@@ -128,7 +132,7 @@
                     right: 10px;
                 }
             }
-        `;
+`); shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet2]; })();
 
         // === 右侧浮动总结面板 ===
         const summaryPanel = document.createElement('div');
@@ -194,8 +198,6 @@
         const { panel: settingsPanel, overlay: settingsOverlay, aboutModal, aboutOverlay } = createSettingsPanel(shadow);
 
         // 组装到Shadow DOM
-        shadow.appendChild(mainStyle);
-        shadow.appendChild(btnStyle);
         shadow.appendChild(container);
         shadow.appendChild(summaryPanel);
 

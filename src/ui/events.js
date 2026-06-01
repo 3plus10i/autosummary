@@ -165,9 +165,10 @@
             autoSaveTimer = setTimeout(function() {
                 if (configSelect.value !== _savingConfigName) return;
                 if (!_savingConfigName || _savingConfigName === '__new__') return;
+                var apiKeyInput = settingsPanel.querySelector('#api-key');
                 var changes = {
                     API_URL: settingsPanel.querySelector('#api-url').value.trim(),
-                    API_KEY: settingsPanel.querySelector('#api-key').value.trim(),
+                    API_KEY: apiKeyInput.dataset.realValue || '',
                     MAX_TOKENS: parseInt(settingsPanel.querySelector('#max-tokens').value) || 5000,
                     PROMPT: promptTextarea.value.trim() || ctx.DEFAULT_CONFIG.PROMPT,
                     MODEL: settingsPanel.querySelector('#model').value.trim() || ctx.DEFAULT_CONFIG.MODEL
@@ -176,10 +177,34 @@
             }, 500);
         }
 
-        ['#api-url', '#api-key', '#model', '#max-tokens'].forEach(function(sel) {
+        ['#api-url', '#model', '#max-tokens'].forEach(function(sel) {
             settingsPanel.querySelector(sel).addEventListener('input', scheduleAutoSave);
         });
         promptTextarea.addEventListener('input', scheduleAutoSave);
+
+        // API Key 输入框：焦点/失焦处理
+        var apiKeyInput = settingsPanel.querySelector('#api-key');
+        apiKeyInput.addEventListener('focus', function() {
+            if (apiKeyInput.dataset.realValue) {
+                apiKeyInput.dataset.wasSet = '1';
+                apiKeyInput.value = '';
+                apiKeyInput.dataset.realValue = '';
+            }
+        });
+        apiKeyInput.addEventListener('blur', function() {
+            var newVal = apiKeyInput.value.trim();
+            if (newVal) {
+                apiKeyInput.dataset.realValue = newVal;
+                apiKeyInput.value = '●'.repeat(16);
+                scheduleAutoSave();
+            } else if (apiKeyInput.dataset.wasSet === '1') {
+                // 原有 key，用户清空后失焦 → 保留旧 key（data-real-value 已在 focus 时暂存到外层闭包）
+                // 此时 realValue 为空，需要从 CONFIG 恢复
+                apiKeyInput.dataset.realValue = ctx.CONFIG.API_KEY || '';
+                apiKeyInput.value = apiKeyInput.dataset.realValue ? '●'.repeat(16) : '';
+            }
+            delete apiKeyInput.dataset.wasSet;
+        });
 
         // 配置选择下拉
         configSelect.addEventListener('change', function(e) {
@@ -516,7 +541,9 @@
 
     function populateFormFromConfig(panel, config) {
         panel.querySelector('#api-url').value = config.API_URL;
-        panel.querySelector('#api-key').value = config.API_KEY;
+        var keyInput = panel.querySelector('#api-key');
+        keyInput.value = config.API_KEY ? '●'.repeat(16) : '';
+        keyInput.dataset.realValue = config.API_KEY || '';
         panel.querySelector('#max-tokens').value = config.MAX_TOKENS;
         panel.querySelector('#prompt').value = config.PROMPT;
         panel.querySelector('#model').value = config.MODEL;

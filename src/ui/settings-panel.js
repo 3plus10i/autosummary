@@ -16,7 +16,7 @@
         const panel = document.createElement('div');
         panel.className = 'ai-settings-panel';
         panel.innerHTML = `
-            <h3>⚙ 设置</h3>
+            <h3>⚙ 设置 <span style="font-size:12px;font-weight:400;color:#888">修改实时保存</span></h3>
             <div class="form-group inline">
                 <label for="api-url">API URL<span class="ai-info-icon" title="不用写最后的&quot;/chat/completions&quot;，但如果有v1等要保留，例如 &quot;https://api.siliconflow.cn/v1&quot;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -29,7 +29,7 @@
             </div>
             <div class="form-group inline">
                 <label for="api-key">API Key</label>
-                <input type="text" id="api-key" class="ai-password-mask" value="${CONFIG.API_KEY}" placeholder="请输入你的API Key">
+                <input type="text" id="api-key" class="ai-password-mask" value="${CONFIG.API_KEY ? '●'.repeat(16) : ''}" placeholder="请输入你的API Key" data-real-value="${CONFIG.API_KEY}">
             </div>
             <div class="form-group inline">
                 <label for="model">模型</label>

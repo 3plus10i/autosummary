@@ -15,6 +15,14 @@
 
 当前版本 v2.0
 
+## 抓取强度
+出于节省Tokens，聚焦页面核心内容的目的，脚本设计了三级抓取强度。  
+但有些网站由于网页结构问题，第一次总结时可能无法正确回复，表现为：
+- 上行tokens显示非常少（小于100）
+- AI告诉用户看不到页面内容
+此时可尝试再次总结，脚本会采用更激进的抓取方式获取页面内容。  
+如果连续尝试三次都无法正确总结，则说明脚本暂时无法支持总结该页面。
+
 ## 快速开始
 
 ### 1. 构建
@@ -29,7 +37,7 @@ node build.js
 
 ### 2. 安装
 
-将 `dist/ai-summary.user.js` 拖入类似 Tampermonkey 的浏览器插件管理器中安装。
+访问油叉（GreasyFork）发布页：[AI网页内容总结](https://greasyfork.org/zh-CN/scripts/580529-ai%E7%BD%91%E9%A1%B5%E5%86%85%E5%AE%B9%E6%80%BB%E7%BB%93)
 
 ### 3. 配置
 
@@ -40,46 +48,44 @@ node build.js
 - **最大 Token 数**：默认 5000
 - **提示词**：可选用预设模板
 
+其实不写也行，默认配置暂时也提供AI服务。
+
 ## 项目结构
 
 ```
 AutoSummary/
 ├── build.js                 # 构建脚本
-├── dev/
-│   └── clean_unicode.js     # 汉字斜杠污染清理脚本
 ├── ref/
 │   └── origin.js            # 原始单文件脚本（备份）
 ├── public/
 │   └── as.png               # 图标资源
-├── src/
-│   ├── frontmatter.js       # 油猴元数据头
-│   ├── main.js              # 入口初始化
-│   ├── api/
-│   │   └── summarize.js     # API 调用逻辑
-│   ├── config/
-│   │   ├── defaults.js      # 默认配置
-│   │   ├── storage.js       # 配置存取（GM_setValue/saved_configs）
-│   │   └── templates.js     # 提示词模板
-│   ├── utils/
-│   │   ├── content.js       # 页面内容提取
-│   │   ├── drag.js          # 按钮拖拽停靠
-│   │   ├── history.js       # 历史记录存储
-│   │   ├── markdown.js      # Markdown 渲染 + 打字机效果
-│   │   ├── shortcut.js      # 快捷键工具
-│   │   └── token.js         # Token 估算工具
-│   ├── ui/
-│   │   ├── events.js        # 全部事件绑定
-│   │   ├── history-modal.js # 历史总结模态框
-│   │   ├── settings-panel.js# 设置面板
-│   │   └── summary-panel.js # 总结面板 + 浮动按钮
-│   └── styles/
-│       ├── content.css
-│       ├── drag.css
-│       ├── history.css
-│       ├── settings.css
-│       └── summary.css
-└── dist/
-    └── ai-summary.user.js   # 构建产物
+└── src/
+    ├── frontmatter.js       # 油猴元数据头
+    ├── main.js              # 入口初始化
+    ├── api/
+    │   └── summarize.js     # API 调用逻辑
+    ├── config/
+    │   ├── defaults.js      # 默认配置
+    │   ├── storage.js       # 配置存取（GM_setValue/saved_configs）
+    │   └── templates.js     # 提示词模板
+    ├── utils/
+    │   ├── content.js       # 页面内容提取
+    │   ├── drag.js          # 按钮拖拽停靠
+    │   ├── history.js       # 历史记录存储
+    │   ├── markdown.js      # Markdown 渲染 + 打字机效果
+    │   ├── shortcut.js      # 快捷键工具
+    │   └── token.js         # Token 估算工具
+    ├── ui/
+    │   ├── events.js        # 全部事件绑定
+    │   ├── history-modal.js # 历史总结模态框
+    │   ├── settings-panel.js# 设置面板
+    │   └── summary-panel.js # 总结面板 + 浮动按钮
+    └── styles/
+        ├── content.css
+        ├── drag.css
+        ├── history.css
+        ├── settings.css
+        └── summary.css
 ```
 
 ## 构建系统

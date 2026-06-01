@@ -65,7 +65,7 @@
       if (userSystemPrompt) {
         message += `<final_system_prompt>${userSystemPrompt}</final_system_prompt>`;
       }
-      message += userContent;
+      message += `<target_content>${userContent}</target_content>`
       this.messages.push({ role: "user", content: message });
 
       this._trimHistory();

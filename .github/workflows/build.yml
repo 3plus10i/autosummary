@@ -1,10 +1,10 @@
-name: Build Userscript
+name: Build and Release
 
 on:
   push:
     branches: [main]
     paths-ignore:
-      - 'dist/**'
+      - '.github/**'
 
 jobs:
   build:
@@ -14,13 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run build
+      - name: Build
         run: node build.js
 
-      - name: Commit dist
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dist/
-          git diff --staged --quiet || git commit -m "chore: auto build [skip ci]"
-          git push
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: latest
+          tag_name: latest
+          files: dist/ai-summary.user.js

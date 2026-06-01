@@ -18,8 +18,8 @@ jobs:
         run: node build.js
 
       - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: latest
-          tag_name: latest
-          files: dist/ai-summary.user.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest dist/ai-summary.user.js --title latest --notes "自动构建" --latest

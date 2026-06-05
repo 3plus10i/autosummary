@@ -475,6 +475,7 @@
             startWidth = panel.offsetWidth;
             startLeft = panel.getBoundingClientRect().left;
             panel.style.transform = 'none';
+            panel.style.left = startLeft + 'px';
             document.body.style.userSelect = 'none';
             document.body.style.cursor = 'ew-resize';
             e.preventDefault();

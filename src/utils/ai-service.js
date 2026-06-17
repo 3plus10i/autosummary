@@ -70,21 +70,27 @@
 
       this._trimHistory();
 
-      const res = await fetch(`${BASE_URL}/v1/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: this._model,
-          messages: this.messages,
-          temperature: 0.7
-        })
+      const response = await new Promise((resolve, reject) => {
+        GM.xmlHttpRequest({
+          method: "POST",
+          url: `${BASE_URL}/v1/chat/completions`,
+          headers: { "Content-Type": "application/json", "Origin": window.location.origin },
+          data: JSON.stringify({
+            model: this._model,
+            messages: this.messages,
+            temperature: 0.7
+          }),
+          onload: (r) => resolve(r),
+          onerror: (e) => reject(new Error('网络请求错误')),
+          ontimeout: () => reject(new Error('请求超时'))
+        });
       });
 
-      const raw = await res.text();
+      const raw = response.responseText;
       let data;
       try { data = JSON.parse(raw); } catch { throw new Error(raw); }
 
-      if (!res.ok) throw new Error(JSON.stringify(data, null, 2));
+      if (response.status < 200 || response.status >= 300) throw new Error(JSON.stringify(data, null, 2));
 
       const reply = data?.choices?.[0]?.message?.content
         || JSON.stringify(data, null, 2);

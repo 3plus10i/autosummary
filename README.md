@@ -13,7 +13,8 @@
 
 项目地址：[https://github.com/3plus10i/autosummary](https://github.com/3plus10i/autosummary)
 
-当前版本 v2.0
+当前版本 v2.4
+
 
 ## 抓取强度
 出于节省Tokens，聚焦页面核心内容的目的，脚本设计了三级抓取强度。  

@@ -3,36 +3,18 @@
 
     const ctx = window.__AI_SUMMARY__;
 
-    const HIDE_THRESHOLD = 100;    // 靠近边缘多少像素触发隐藏
+    const HIDE_THRESHOLD = 20;    // 靠近边缘多少像素触发隐藏
     const ANIM_DURATION = 300;     // 移出动画时长(ms)
+    const DEFAULT_MARGIN_RIGHT = 20;     // 默认右下角边距(px)
+    const DEFAULT_MARGIN_BOTTOM = 40;     // 默认右下角边距(px)
 
-    // ===== 持久化位置 =====
-    function savePosition(container) {
-        if (container.classList.contains('hidden')) return;
-        const position = {
-            left: container.style.left,
-            top: container.style.top,
-            right: container.style.right,
-            windowWidth: window.innerWidth,
-            windowHeight: window.innerHeight
-        };
-        GM_setValue('containerPosition', position);
-    }
 
-    function loadPosition(container) {
-        const saved = GM_getValue('containerPosition', null);
-        if (!saved) return;
-        if (saved.top) {
-            const w = container.offsetWidth;
-            const h = container.offsetHeight;
-            const rw = window.innerWidth / saved.windowWidth;
-            const rh = window.innerHeight / (saved.windowHeight || window.innerHeight);
-            const left = parseInt(saved.left) * rw;
-            const top = parseInt(saved.top) * rh;
-            container.style.left = Math.max(0, Math.min(left, window.innerWidth - w)) + 'px';
-            container.style.top = Math.max(0, Math.min(top, window.innerHeight - h)) + 'px';
-            container.style.right = 'auto';
-        }
+    // ===== 初始化位置（始终右下角） =====
+    function initPosition(container) {
+        container.style.right = DEFAULT_MARGIN_RIGHT + 'px';
+        container.style.bottom = DEFAULT_MARGIN_BOTTOM + 'px';
+        container.style.left = 'auto';
+        container.style.top = 'auto';
     }
 
     // ===== 隐藏/恢复 =====
@@ -121,6 +103,7 @@
             container.style.right = 'auto';
         }
         container.style.top = Math.max(10, Math.min(savedTop, window.innerHeight - container.offsetHeight - 10)) + 'px';
+        container.style.bottom = 'auto';
         requestAnimationFrame(function() {
             container.style.opacity = '1';
         });
@@ -130,12 +113,13 @@
     // ===== 拖拽初始化 =====
     function initializeDrag(container, dragHandle, shadow) {
         var isDragging = false, startX, startY, offsetX, offsetY, nearSide = '';
+        var containerW, containerH, btnSpan, pendingFrame;
 
         var sheet = new CSSStyleSheet();
         sheet.replaceSync(`/* CSS_DRAG_PLACEHOLDER */`);
         shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
 
-        loadPosition(container);
+        initPosition(container);
 
         dragHandle.style.touchAction = 'none';
 
@@ -151,6 +135,9 @@
             offsetY = e.clientY - rect.top;
             startX = rect.left;
             startY = rect.top;
+            containerW = container.offsetWidth;
+            containerH = container.offsetHeight;
+            btnSpan = container.querySelector('.ai-summary-btn span');
             container.style.transition = 'none';
             container.style.opacity = '1';
             nearSide = '';
@@ -161,37 +148,41 @@
         function onPointerMove(e) {
             if (!isDragging) return;
             e.preventDefault();
-            var w = container.offsetWidth;
-            var h = container.offsetHeight;
 
-            if (e.clientX < HIDE_THRESHOLD) {
+            var nx = e.clientX - offsetX;
+            var ny = e.clientY - offsetY;
+            nx = Math.max(0, Math.min(nx, window.innerWidth - containerW));
+            ny = Math.max(0, Math.min(ny, window.innerHeight - containerH));
+            startX = nx;
+            startY = ny;
+
+            if (nx < HIDE_THRESHOLD) {
                 nearSide = 'left';
-            } else if (e.clientX > window.innerWidth - HIDE_THRESHOLD) {
+            } else if (nx + containerW > window.innerWidth - HIDE_THRESHOLD) {
                 nearSide = 'right';
             } else {
                 nearSide = '';
             }
 
-            var btnSpan = container.querySelector('.ai-summary-btn span');
-            if (nearSide) {
-                container.style.opacity = '0.45';
-                container.classList.add('near-edge');
-                if (btnSpan) btnSpan.textContent = '松手隐藏';
-            } else {
-                container.style.opacity = '1';
-                container.classList.remove('near-edge');
-                if (btnSpan) btnSpan.textContent = '总结网页';
-            }
-
-            var nx = e.clientX - offsetX;
-            var ny = e.clientY - offsetY;
-            nx = Math.max(0, Math.min(nx, window.innerWidth - w));
-            ny = Math.max(0, Math.min(ny, window.innerHeight - h));
-            container.style.left = nx + 'px';
-            container.style.top = ny + 'px';
-            container.style.right = 'auto';
-            startX = nx;
-            startY = ny;
+            // 写操作合并在一个 rAF 中，避免每次 pointermove 都强制 reflow
+            if (pendingFrame) return;
+            pendingFrame = requestAnimationFrame(function() {
+                pendingFrame = null;
+                if (!isDragging) return;
+                if (nearSide) {
+                    container.style.opacity = '0.45';
+                    container.classList.add('near-edge');
+                    if (btnSpan) btnSpan.textContent = '松手隐藏';
+                } else {
+                    container.style.opacity = '1';
+                    container.classList.remove('near-edge');
+                    if (btnSpan) btnSpan.textContent = '总结网页';
+                }
+                container.style.right = (window.innerWidth - startX - containerW) + 'px';
+                container.style.bottom = (window.innerHeight - startY - containerH) + 'px';
+                container.style.left = 'auto';
+                container.style.top = 'auto';
+            });
         }
 
         function endDrag() {
@@ -207,7 +198,6 @@
             } else {
                 container.style.opacity = '';
                 container.style.transition = '';
-                savePosition(container);
             }
             nearSide = '';
         }
@@ -219,11 +209,22 @@
         dragHandle.addEventListener('pointerup', endDrag);
         dragHandle.addEventListener('pointercancel', endDrag);
 
-        // 窗口尺寸变化时恢复位置
+        // 窗口尺寸变化时以 right/bottom 为基准保持按钮在视口内
         window.addEventListener('resize', function() {
-            if (!container.classList.contains('hidden')) {
-                loadPosition(container);
+            if (container.classList.contains('hidden')) return;
+            var w = container.offsetWidth;
+            var h = container.offsetHeight;
+            var r = parseInt(container.style.right);
+            var b = parseInt(container.style.bottom);
+            if (!isNaN(r)) {
+                r = Math.max(0, Math.min(r, window.innerWidth - w));
+                container.style.right = r + 'px';
             }
+            if (!isNaN(b)) {
+                b = Math.max(0, Math.min(b, window.innerHeight - h));
+                container.style.bottom = b + 'px';
+            }
+            // 实测发现，将窗口挤压到0高度后再放大，按钮的bottom位置为0。但是无所谓了很少有人这样，后果也不严重。
         });
     }
 

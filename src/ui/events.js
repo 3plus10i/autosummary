@@ -145,6 +145,11 @@
             settingsPanel.style.display = 'none';
             settingsOverlay.style.display = 'none';
         });
+        settingsPanel.querySelector('.hide-btn').addEventListener('click', () => {
+            container.style.display = 'none';
+            settingsPanel.style.display = 'none';
+            settingsOverlay.style.display = 'none';
+        });
         settingsOverlay.addEventListener('click', () => {
             settingsPanel.style.display = 'none';
             settingsOverlay.style.display = 'none';

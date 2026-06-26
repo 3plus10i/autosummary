@@ -104,6 +104,7 @@
                     </button>
                 </div>
                 <div class="action-buttons-right">
+                    <button class="hide-btn" title="在此页面上暂时隐藏总结按钮，以避免影响浏览。">隐藏总结按钮</button>
                     <button class="cancel-btn">关闭</button>
                 </div>
             </div>

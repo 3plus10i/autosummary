@@ -204,6 +204,10 @@
     color: #ff4d4f !important;
     border-color: #ff4d4f !important;
 }
+.action-buttons-right .hide-btn:hover {
+    color: #fa8c16 !important;
+    border-color: #fa8c16 !important;
+}
 
 .ai-config-select,
 .ai-prompt-template-select {

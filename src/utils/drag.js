@@ -137,13 +137,15 @@
 
         loadPosition(container);
 
-        dragHandle.addEventListener('mousedown', function(e) {
-            // 如果是隐藏状态，点击恢复
+        dragHandle.style.touchAction = 'none';
+
+        function onPointerDown(e) {
             if (container.classList.contains('hidden')) {
                 restoreContainer(container);
                 return;
             }
             isDragging = true;
+            dragHandle.setPointerCapture(e.pointerId);
             var rect = container.getBoundingClientRect();
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
@@ -154,15 +156,14 @@
             nearSide = '';
             document.body.style.userSelect = 'none';
             e.preventDefault();
-        });
+        }
 
-        document.addEventListener('mousemove', function(e) {
+        function onPointerMove(e) {
             if (!isDragging) return;
             e.preventDefault();
             var w = container.offsetWidth;
             var h = container.offsetHeight;
 
-            // 判断靠近哪一侧
             if (e.clientX < HIDE_THRESHOLD) {
                 nearSide = 'left';
             } else if (e.clientX > window.innerWidth - HIDE_THRESHOLD) {
@@ -171,7 +172,6 @@
                 nearSide = '';
             }
 
-            // 半透明视效 + 提示文字
             var btnSpan = container.querySelector('.ai-summary-btn span');
             if (nearSide) {
                 container.style.opacity = '0.45';
@@ -183,7 +183,6 @@
                 if (btnSpan) btnSpan.textContent = '总结网页';
             }
 
-            // 计算位置
             var nx = e.clientX - offsetX;
             var ny = e.clientY - offsetY;
             nx = Math.max(0, Math.min(nx, window.innerWidth - w));
@@ -193,9 +192,9 @@
             container.style.right = 'auto';
             startX = nx;
             startY = ny;
-        });
+        }
 
-        document.addEventListener('mouseup', function() {
+        function endDrag() {
             if (!isDragging) return;
             isDragging = false;
             document.body.style.userSelect = 'auto';
@@ -211,7 +210,14 @@
                 savePosition(container);
             }
             nearSide = '';
-        });
+        }
+
+        // 核心：使用 pointer 事件 + setPointerCapture
+        // pointerup/pointercancel 后浏览器自动释放捕获，无需手动 releasePointerCapture
+        dragHandle.addEventListener('pointerdown', onPointerDown);
+        dragHandle.addEventListener('pointermove', onPointerMove);
+        dragHandle.addEventListener('pointerup', endDrag);
+        dragHandle.addEventListener('pointercancel', endDrag);
 
         // 窗口尺寸变化时恢复位置
         window.addEventListener('resize', function() {

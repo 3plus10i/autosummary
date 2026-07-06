@@ -55,13 +55,22 @@
         }
 
         let content;
+        let shouldClean = true;
         if (count === 0 && isZhihuAnswerPage(url)) {
             content = getTextExcluding(source, ['.Card.MoreAnswers']);
+        } else if (count === 1) {
+            const readable = extractWithReadability();
+            if (readable) {
+                content = readable;
+                shouldClean = false; // Readability 已做内容清洗
+            } else {
+                content = source.innerText;
+            }
         } else {
             content = source.innerText;
         }
 
-        if (count <= 1) {
+        if (count <= 1 && shouldClean) {
             content = cleanText(content);
         }
 
@@ -90,6 +99,25 @@
             }
         }
         return clone.innerText;
+    }
+
+    function extractWithReadability() {
+        try {
+            if (typeof Readability === 'undefined') return null;
+            if (typeof isProbablyReaderable !== 'undefined' && !isProbablyReaderable(document)) {
+                return null;
+            }
+            const clone = document.cloneNode(true);
+            const reader = new Readability(clone);
+            const result = reader.parse();
+            if (result && result.textContent && result.textContent.trim().length > 100) {
+                return result.textContent.trim();
+            }
+            return null;
+        } catch (e) {
+            console.warn('[AI Summary] Readability 提取失败:', e);
+            return null;
+        }
     }
 
     function cleanText(text) {

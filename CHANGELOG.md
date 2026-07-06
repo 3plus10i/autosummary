@@ -1,3 +1,7 @@
+## v2.7
+
+- **第二级抓取引入 Readability.js** — 第一级语义提取失败后，第二次总结时优先使用 Readability.js 提取主体内容；若不适合或失败，则回退到原有 `body.innerText + cleanText` 逻辑
+
 ## v2.6
 
 - **知乎回答页首级抓取优化** — 第一级抓取强度下，知乎回答页（`https://www.zhihu.com/question/*/answer/*`）自动排除 `.Card.MoreAnswers` 元素，聚焦当前回答；第二、三级抓取强度不受影响

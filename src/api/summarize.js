@@ -3,6 +3,25 @@
 
     const ctx = window.__AI_SUMMARY__;
 
+    // Debug 开关：在控制台执行 window.__AI_SUMMARY__.DEBUG = true 开启
+    let DEBUG = false;
+    Object.defineProperty(ctx, 'DEBUG', {
+        get() { return DEBUG; },
+        set(value) { DEBUG = !!value; }
+    });
+
+    function maskApiKey(key) {
+        if (!key) return 'none';
+        return '****' + key.slice(-4);
+    }
+
+    function logDebugPayload(label, payload) {
+        if (!ctx.DEBUG) return;
+        console.group('[AI Summary] Debug - ' + label);
+        console.log(JSON.parse(JSON.stringify(payload)));
+        console.groupEnd();
+    }
+
     /** AI路由 */
     function shouldUseBuiltinAI() {
         const configs = ctx.getAllConfigs();
@@ -17,6 +36,11 @@
     async function summarizeWithBuiltinAI(content, shadow, contentContainer) {
         const CONFIG = ctx.CONFIG;
         const typeWriter = ctx.typeWriter;
+
+        logDebugPayload('内置 AI 业务内容', {
+            userSystemPrompt: CONFIG.PROMPT,
+            userContent: content
+        });
 
         contentContainer.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div><span>正在生成总结...</span></div>';
 
@@ -64,6 +88,24 @@
             if (apiUrl && !apiUrl.endsWith('/chat/completions')) {
                 apiUrl = apiUrl.replace(/\/+$/, '') + '/chat/completions';
             }
+
+            logDebugPayload('自定义 AI 请求', {
+                url: apiUrl,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + maskApiKey(CONFIG.API_KEY)
+                },
+                body: {
+                    model: CONFIG.MODEL,
+                    messages: [
+                        { role: 'system', content: CONFIG.PROMPT },
+                        { role: 'user', content: content }
+                    ],
+                    max_tokens: CONFIG.MAX_TOKENS,
+                    temperature: 0.7,
+                    stream: false
+                }
+            });
 
             const requestPromise = new Promise((resolve, reject) => {
                 GM.xmlHttpRequest({

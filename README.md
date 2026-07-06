@@ -13,7 +13,7 @@
 
 项目地址：[https://github.com/3plus10i/autosummary](https://github.com/3plus10i/autosummary)
 
-当前版本 v2.5
+当前版本 v2.6
 
 
 ## 抓取强度
@@ -74,7 +74,6 @@ AutoSummary/
     │   ├── drag.js          # 按钮拖拽停靠
     │   ├── history.js       # 历史记录存储
     │   ├── markdown.js      # Markdown 渲染 + 打字机效果
-    │   ├── shortcut.js      # 快捷键工具
     │   └── token.js         # Token 估算工具
     ├── ui/
     │   ├── events.js        # 全部事件绑定
@@ -82,7 +81,6 @@ AutoSummary/
     │   ├── settings-panel.js# 设置面板
     │   └── summary-panel.js # 总结面板 + 浮动按钮
     └── styles/
-        ├── content.css
         ├── drag.css
         ├── history.css
         ├── settings.css

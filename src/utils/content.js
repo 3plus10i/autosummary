@@ -54,7 +54,13 @@
             if (semantic) source = semantic;
         }
 
-        let content = source.innerText;
+        let content;
+        if (count === 0 && isZhihuAnswerPage(url)) {
+            content = getTextExcluding(source, ['.Card.MoreAnswers']);
+        } else {
+            content = source.innerText;
+        }
+
         if (count <= 1) {
             content = cleanText(content);
         }
@@ -68,6 +74,22 @@
             if (el) return el;
         }
         return null;
+    }
+
+    function isZhihuAnswerPage(url) {
+        return /^https:\/\/www\.zhihu\.com\/question\/[^/]+\/answer\/[^/]+/.test(url);
+    }
+
+    function getTextExcluding(source, excludeSelectors) {
+        if (!excludeSelectors || excludeSelectors.length === 0) return source.innerText;
+        const clone = source.cloneNode(true);
+        for (let i = 0; i < excludeSelectors.length; i++) {
+            const els = clone.querySelectorAll(excludeSelectors[i]);
+            for (let j = 0; j < els.length; j++) {
+                els[j].remove();
+            }
+        }
+        return clone.innerText;
     }
 
     function cleanText(text) {

@@ -1,3 +1,8 @@
+## v2.6
+
+- **知乎回答页首级抓取优化** — 第一级抓取强度下，知乎回答页（`https://www.zhihu.com/question/*/answer/*`）自动排除 `.Card.MoreAnswers` 元素，聚焦当前回答；第二、三级抓取强度不受影响
+- **文档同步** — 删除 README 项目结构中实际不存在的 `src/utils/shortcut.js` 与 `src/styles/content.css`
+
 ## v2.5
 
 - **设置面板新增隐藏按钮** — 点击"隐藏总结按钮"可在当前页面暂时隐藏，刷新或新页面自动恢复

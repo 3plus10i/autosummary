@@ -171,4 +171,66 @@
     ctx.deleteConfig = deleteConfig;
     ctx.renameConfig = renameConfig;
     ctx.updateConfigSelectors = updateConfigSelectors;
+
+    // ===== 显示设置（独立于 AI 配置存储） =====
+    var DEFAULT_DISPLAY = ctx.DEFAULT_DISPLAY_SETTINGS;
+
+    function loadDisplaySettings() {
+        var saved = GM_getValue('display_settings', null);
+        if (!saved) {
+            saved = { ...DEFAULT_DISPLAY };
+            GM_setValue('display_settings', saved);
+        }
+        ctx.DISPLAY_SETTINGS = saved;
+        return saved;
+    }
+
+    function saveDisplaySettings(changes) {
+        var current = GM_getValue('display_settings', DEFAULT_DISPLAY);
+        var updated = { ...current, ...changes };
+        GM_setValue('display_settings', updated);
+        ctx.DISPLAY_SETTINGS = updated;
+        return updated;
+    }
+
+    function matchesDomain(hostname, pattern) {
+        // 去掉首尾空格
+        pattern = pattern.trim();
+        // 转换通配符为正则：*.example.com → 匹配 example.com 及其子域名
+        var regexStr = '^' + pattern
+            .replace(/\./g, '\\.')
+            .replace(/\\\.\\\*/g, '(\\.)?')   // 把 * 转为 (\\.)? 使其成为可选通配段
+            .replace(/\*/g, '[^.]*') + '$';
+        var regex = new RegExp(regexStr, 'i');
+        return regex.test(hostname);
+    }
+
+    function shouldShowButton() {
+        var ds = ctx.DISPLAY_SETTINGS;
+        if (!ds) {
+            ds = loadDisplaySettings();
+        }
+        var hostname = window.location.hostname;
+        var whitelist = (ds.whitelist || '').split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+        var blacklist = (ds.blacklist || '').split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+
+        if (ds.showButtonByDefault) {
+            // 黑名单模式：默认显示，但黑名单中的不显示
+            for (var i = 0; i < blacklist.length; i++) {
+                if (matchesDomain(hostname, blacklist[i])) return false;
+            }
+            return true;
+        } else {
+            // 白名单模式：默认不显示，仅白名单中的显示
+            for (var j = 0; j < whitelist.length; j++) {
+                if (matchesDomain(hostname, whitelist[j])) return true;
+            }
+            return false;
+        }
+    }
+
+    ctx.loadDisplaySettings = loadDisplaySettings;
+    ctx.saveDisplaySettings = saveDisplaySettings;
+    ctx.shouldShowButton = shouldShowButton;
+    ctx.matchesDomain = matchesDomain;
 })();

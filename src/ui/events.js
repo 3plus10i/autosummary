@@ -20,6 +20,8 @@
         const addHistory = ctx.addHistory;
         const refreshHistoryList = ctx.refreshHistoryList;
         const estimateTokens = ctx.estimateTokens;
+        const saveDisplaySettings = ctx.saveDisplaySettings;
+        const loadDisplaySettings = ctx.loadDisplaySettings;
 
         // 初始化拖拽
         initializeDrag(container, dragHandle, shadow);
@@ -293,6 +295,68 @@
             if (configName && applyConfig(configName)) {
                 updateConfigSelectors(settingsPanel, summaryPanel);
             }
+        });
+
+        // === 显示设置事件 ===
+        var displayModeBtn = settingsPanel.querySelector('.display-mode-btn[data-mode="toggle"]');
+        var whitelistTextarea = settingsPanel.querySelector('#display-whitelist');
+        var blacklistTextarea = settingsPanel.querySelector('#display-blacklist');
+
+        var displaySaveTimer = null;
+        function scheduleDisplaySave() {
+            clearTimeout(displaySaveTimer);
+            displaySaveTimer = setTimeout(function() {
+                saveDisplaySettings({
+                    showButtonByDefault: displayModeBtn.textContent === '关',
+                    whitelist: whitelistTextarea.value,
+                    blacklist: blacklistTextarea.value
+                });
+            }, 500);
+        }
+
+        displayModeBtn.addEventListener('click', function() {
+            var isActive = displayModeBtn.classList.toggle('active');
+            displayModeBtn.textContent = isActive ? '开' : '关';
+            scheduleDisplaySave();
+        });
+        whitelistTextarea.addEventListener('input', scheduleDisplaySave);
+        blacklistTextarea.addEventListener('input', scheduleDisplaySave);
+
+        // 解析域名的顶级域名（去掉子域名和 www）
+        function getTopDomain(hostname) {
+            // 先尝试提取最后两段作为主域名
+            var parts = hostname.split('.');
+            if (parts.length <= 2) return hostname;
+            // 常见二级域后缀（如 .com.cn, .co.uk）
+            var secondLevel = ['com.cn', 'org.cn', 'net.cn', 'gov.cn', 'co.uk', 'co.jp', 'co.kr'];
+            var lastTwo = parts.slice(-2).join('.');
+            if (secondLevel.indexOf(lastTwo) !== -1 && parts.length >= 3) {
+                return '*.' + parts.slice(-3).join('.');
+            }
+            return '*.' + parts.slice(-2).join('.');
+        }
+
+        // 将当前网站加入白/黑名单
+        settingsPanel.querySelectorAll('.add-current-site-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var target = btn.dataset.target;
+                var domain = getTopDomain(window.location.hostname);
+                if (target === 'whitelist') {
+                    var lines = whitelistTextarea.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+                    if (lines.indexOf(domain) === -1) {
+                        lines.push(domain);
+                        whitelistTextarea.value = lines.join('\n');
+                        scheduleDisplaySave();
+                    }
+                } else if (target === 'blacklist') {
+                    var lines2 = blacklistTextarea.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+                    if (lines2.indexOf(domain) === -1) {
+                        lines2.push(domain);
+                        blacklistTextarea.value = lines2.join('\n');
+                        scheduleDisplaySave();
+                    }
+                }
+            });
         });
 
         // 初始化下拉框

@@ -12,11 +12,49 @@
         const CONFIG = ctx.CONFIG;
         const PROMPT_TEMPLATES = ctx.PROMPT_TEMPLATES;
         const getAllConfigs = ctx.getAllConfigs;
+        const DISPLAY = ctx.DISPLAY_SETTINGS || ctx.loadDisplaySettings();
 
         const panel = document.createElement('div');
         panel.className = 'ai-settings-panel';
         panel.innerHTML = `
             <h3>⚙ 设置 <span style="font-size:12px;font-weight:400;color:#888">修改实时保存</span></h3>
+
+            <!-- ===== 显示设置 ===== -->
+            <div class="display-settings-section">
+                <h4 class="settings-section-title">显示设置</h4>
+                <div class="form-group inline">
+                    <label>仅在白名单网站显示总结按钮
+                        <span class="ai-info-icon" title="开启：默认不显示按钮，仅在白名单域名匹配的网站显示&#10;关闭：默认显示按钮，仅黑名单域名匹配的网站隐藏">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </span>
+                    </label>
+                    <button class="display-mode-btn ${DISPLAY.showButtonByDefault ? '' : 'active'}" data-mode="toggle">${DISPLAY.showButtonByDefault ? '关' : '开'}</button>
+                </div>
+                <div class="form-group domain-lists-row">
+                    <div class="domain-list-col">
+                        <div class="domain-list-header">
+                            <label for="display-whitelist">白名单域名</label>
+                            <button class="add-current-site-btn" data-target="whitelist">加入当前网站</button>
+                        </div>
+                        <textarea id="display-whitelist" class="domain-list-textarea" placeholder="每行一个域名，支持通配符&#10;例如：*.zhihu.com">${DISPLAY.whitelist || ''}</textarea>
+                    </div>
+                    <div class="domain-list-col">
+                        <div class="domain-list-header">
+                            <label for="display-blacklist">黑名单域名</label>
+                            <button class="add-current-site-btn" data-target="blacklist">加入当前网站</button>
+                        </div>
+                        <textarea id="display-blacklist" class="domain-list-textarea" placeholder="每行一个域名，支持通配符&#10;例如：*.github.com">${DISPLAY.blacklist || ''}</textarea>
+                    </div>
+                </div>
+            </div>
+            <hr class="settings-divider">
+
+            <!-- ===== AI服务设置 ===== -->
+            <h4 class="settings-section-title">AI服务设置</h4>
             <div class="form-group inline">
                 <label for="api-url">API URL<span class="ai-info-icon" title="不用写最后的&quot;/chat/completions&quot;，但如果有v1等要保留，例如 &quot;https://api.siliconflow.cn/v1&quot;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

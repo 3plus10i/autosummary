@@ -14,4 +14,12 @@
     // 暴露到全局作用域供其他模块使用
     window.__AI_SUMMARY__ = window.__AI_SUMMARY__ || {};
     window.__AI_SUMMARY__.DEFAULT_CONFIG = DEFAULT_CONFIG;
+
+    // 显示设置默认值（与 AI 配置独立存储）
+    var DEFAULT_DISPLAY_SETTINGS = {
+        showButtonByDefault: false,    // false=白名单模式, true=黑名单模式
+        whitelist: '*.zhihu.com',
+        blacklist: '*.github.com'
+    };
+    window.__AI_SUMMARY__.DEFAULT_DISPLAY_SETTINGS = DEFAULT_DISPLAY_SETTINGS;
 })();

@@ -9,14 +9,22 @@
     // 1. 加载配置
     ctx.loadConfig();
 
-    // 2. 创建元素
+    // 2. 加载显示设置
+    ctx.loadDisplaySettings();
+
+    // 3. 创建元素
     const elements = ctx.createElements();
 
-    // 3. 创建历史面板
+    // 4. 根据黑白名单控制按钮显隐
+    if (!ctx.shouldShowButton()) {
+        elements.container.style.display = 'none';
+    }
+
+    // 5. 创建历史面板
     const historyEls = ctx.createHistoryPanel(elements.shadow);
     elements.historyModal = historyEls.modal;
     elements.historyOverlay = historyEls.overlay;
 
-    // 4. 初始化事件
+    // 6. 初始化事件
     ctx.initializeEvents(elements);
 })();

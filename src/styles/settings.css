@@ -389,6 +389,124 @@
     to { opacity: 1; }
 }
 
+/* 显示设置区域 */
+.display-settings-section {
+    margin-bottom: 12px;
+}
+
+.settings-section-title {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #262626;
+}
+
+.settings-divider {
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    margin: 0 0 12px 0;
+}
+
+/* 显示模式切换按钮 */
+.display-mode-btn {
+    padding: 4px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #595959;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 32px;
+    line-height: 1.5715;
+}
+
+.display-mode-btn:hover {
+    color: #1677ff;
+    border-color: #1677ff;
+}
+
+.display-mode-btn.active {
+    background: #1677ff;
+    color: #ffffff;
+    border-color: #1677ff;
+}
+
+/* 域名列表横向并列 */
+.domain-lists-row {
+    display: flex;
+    gap: 12px;
+}
+
+.domain-list-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.domain-list-col label {
+    display: block;
+    margin-bottom: 6px;
+    color: #434343;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* 域名列表 textarea */
+.domain-list-textarea {
+    width: 100%;
+    height: 80px;
+    padding: 6px 11px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    resize: vertical;
+    background: #ffffff;
+    color: #262626;
+    transition: all 0.2s;
+    outline: none;
+    line-height: 1.6;
+}
+
+.domain-list-textarea:hover {
+    border-color: #4096ff;
+}
+
+.domain-list-textarea:focus {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.domain-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.domain-list-header label {
+    margin-bottom: 0;
+}
+
+.add-current-site-btn {
+    padding: 4px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #595959;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    height: 28px;
+}
+
+.add-current-site-btn:hover {
+    color: #1677ff;
+    border-color: #1677ff;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
     .ai-settings-panel {

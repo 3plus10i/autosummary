@@ -13,7 +13,7 @@
 
 项目地址：[https://github.com/3plus10i/autosummary](https://github.com/3plus10i/autosummary)
 
-当前版本 v2.8
+当前版本 v2.9
 
 
 ## 抓取强度

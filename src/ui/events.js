@@ -298,7 +298,7 @@
         });
 
         // === 显示设置事件 ===
-        var displayModeBtn = settingsPanel.querySelector('.display-mode-btn[data-mode="toggle"]');
+        var displayModeBtn = settingsPanel.querySelector('.display-mode-btn');
         var whitelistTextarea = settingsPanel.querySelector('#display-whitelist');
         var blacklistTextarea = settingsPanel.querySelector('#display-blacklist');
 
@@ -307,16 +307,21 @@
             clearTimeout(displaySaveTimer);
             displaySaveTimer = setTimeout(function() {
                 saveDisplaySettings({
-                    showButtonByDefault: displayModeBtn.textContent === '关',
+                    showButtonByDefault: displayModeBtn.dataset.mode === 'blacklist',
                     whitelist: whitelistTextarea.value,
                     blacklist: blacklistTextarea.value
                 });
             }, 500);
         }
 
+        function updateDisplayModeButton(mode) {
+            displayModeBtn.dataset.mode = mode;
+            displayModeBtn.textContent = ctx.DISPLAY_MODE_LABELS[mode];
+        }
+
         displayModeBtn.addEventListener('click', function() {
-            var isActive = displayModeBtn.classList.toggle('active');
-            displayModeBtn.textContent = isActive ? '开' : '关';
+            var newMode = displayModeBtn.dataset.mode === 'whitelist' ? 'blacklist' : 'whitelist';
+            updateDisplayModeButton(newMode);
             scheduleDisplaySave();
         });
         whitelistTextarea.addEventListener('input', scheduleDisplaySave);

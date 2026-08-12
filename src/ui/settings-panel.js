@@ -8,11 +8,18 @@
 
     ctx.README_CONTENT = README_CONTENT;
 
+    // 显示模式按钮文案映射
+    ctx.DISPLAY_MODE_LABELS = {
+        whitelist: '仅在白名单网站显示',
+        blacklist: '仅不在黑名单网站显示'
+    };
+
     function createSettingsPanel(shadow) {
         const CONFIG = ctx.CONFIG;
         const PROMPT_TEMPLATES = ctx.PROMPT_TEMPLATES;
         const getAllConfigs = ctx.getAllConfigs;
         const DISPLAY = ctx.DISPLAY_SETTINGS || ctx.loadDisplaySettings();
+        const displayMode = DISPLAY.showButtonByDefault ? 'blacklist' : 'whitelist';
 
         const panel = document.createElement('div');
         panel.className = 'ai-settings-panel';
@@ -23,16 +30,8 @@
             <div class="display-settings-section">
                 <h4 class="settings-section-title">显示设置</h4>
                 <div class="form-group inline">
-                    <label>仅在白名单网站显示总结按钮
-                        <span class="ai-info-icon" title="开启：默认不显示按钮，仅在白名单域名匹配的网站显示&#10;关闭：默认显示按钮，仅黑名单域名匹配的网站隐藏">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="16" x2="12" y2="12"></line>
-                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                            </svg>
-                        </span>
-                    </label>
-                    <button class="display-mode-btn ${DISPLAY.showButtonByDefault ? '' : 'active'}" data-mode="toggle">${DISPLAY.showButtonByDefault ? '关' : '开'}</button>
+                    <label>总结按钮如何显示？</label>
+                    <button class="display-mode-btn" data-mode="${displayMode}">${ctx.DISPLAY_MODE_LABELS[displayMode]}</button>
                 </div>
                 <div class="form-group domain-lists-row">
                     <div class="domain-list-col">

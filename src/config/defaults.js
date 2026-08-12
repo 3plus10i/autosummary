@@ -17,8 +17,8 @@
 
     // 显示设置默认值（与 AI 配置独立存储）
     var DEFAULT_DISPLAY_SETTINGS = {
-        showButtonByDefault: false,    // false=白名单模式, true=黑名单模式
-        whitelist: '*.zhihu.com',
+        showButtonByDefault: true,     // false=白名单模式, true=黑名单模式
+        whitelist: '*.zhihu.com\nlinux.do',
         blacklist: '*.github.com'
     };
     window.__AI_SUMMARY__.DEFAULT_DISPLAY_SETTINGS = DEFAULT_DISPLAY_SETTINGS;
